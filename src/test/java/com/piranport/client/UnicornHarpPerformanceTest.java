@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import com.piranport.network.HarpPerformancePayload;
 import io.netty.buffer.Unpooled;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.HumanoidArm;
 import org.junit.jupiter.api.Test;
 
 import java.io.InputStreamReader;
@@ -15,6 +16,37 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 class UnicornHarpPerformanceTest {
+    @Test
+    void mainOrDualHarpsShowOnlyTheMainHarpOnThePhysicalLeft() {
+        for (var dominant : HumanoidArm.values()) for (boolean playing : new boolean[]{false, true}) {
+            for (boolean secondHarp : new boolean[]{false, true}) {
+                var layout = HarpHandLayout.of(true, secondHarp);
+                assertEquals(InteractionHand.MAIN_HAND, layout.visibleSlot(dominant, HumanoidArm.LEFT, playing));
+                assertNull(layout.visibleSlot(dominant, HumanoidArm.RIGHT, playing));
+            }
+        }
+    }
+
+    @Test
+    void offHandHarpLeavesOtherItemOnRightExceptDuringPerformance() {
+        var layout = HarpHandLayout.of(false, true);
+        for (var dominant : HumanoidArm.values()) {
+            for (boolean playing : new boolean[]{false, true})
+                assertEquals(InteractionHand.OFF_HAND, layout.visibleSlot(dominant, HumanoidArm.LEFT, playing));
+            assertEquals(InteractionHand.MAIN_HAND, layout.visibleSlot(dominant, HumanoidArm.RIGHT, false));
+            assertNull(layout.visibleSlot(dominant, HumanoidArm.RIGHT, true));
+        }
+    }
+
+    @Test
+    void switchingAwayFromHarpRestoresVanillaSlotsEvenWithAStalePerformance() {
+        var layout = HarpHandLayout.of(false, false);
+        for (var dominant : HumanoidArm.values()) for (boolean playing : new boolean[]{false, true}) {
+            assertEquals(InteractionHand.MAIN_HAND, layout.visibleSlot(dominant, dominant, playing));
+            assertEquals(InteractionHand.OFF_HAND, layout.visibleSlot(dominant, dominant.getOpposite(), playing));
+        }
+    }
+
     @Test
     void pickerCrossesStringsOnThreeBeatsAndReturnsToRest() {
         assertEquals(0, UnicornHarpPerformance.envelope(0));

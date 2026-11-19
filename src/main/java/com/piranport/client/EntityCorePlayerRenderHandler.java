@@ -158,8 +158,16 @@ public class EntityCorePlayerRenderHandler {
         living.deathTime = player.deathTime;
         living.walkAnimation.setSpeed(player.walkAnimation.speed());
         living.walkAnimation.update(player.walkAnimation.speed(), 1.0F);
-        living.setItemInHand(InteractionHand.MAIN_HAND, player.getMainHandItem());
-        living.setItemInHand(InteractionHand.OFF_HAND, player.getOffhandItem());
+        HarpHandLayout layout = HarpHandLayout.of(player);
+        if (layout == HarpHandLayout.VANILLA) {
+            living.setItemInHand(InteractionHand.MAIN_HAND, player.getMainHandItem());
+            living.setItemInHand(InteractionHand.OFF_HAND, player.getOffhandItem());
+        } else {
+            // 替身不经过玩家的物品层，只给本地展示用替身映射双手；不写玩家装备。
+            boolean playing = UnicornHarpPerformance.isPerforming(player);
+            living.setItemInHand(InteractionHand.MAIN_HAND, layout.visibleStack(player, living.getMainArm(), playing));
+            living.setItemInHand(InteractionHand.OFF_HAND, layout.visibleStack(player, living.getMainArm().getOpposite(), playing));
+        }
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})

@@ -5,6 +5,7 @@ import com.mojang.math.Axis;
 import com.piranport.PiranPort;
 import com.piranport.item.UnicornHarpItem;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -21,6 +22,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RenderHandEvent;
+import net.neoforged.neoforge.client.event.RenderPlayerEvent;
 import org.joml.Vector3f;
 
 import java.util.Iterator;
@@ -55,8 +57,8 @@ public final class UnicornHarpPerformance {
                 && player.getItemInHand(p.hand).getItem() instanceof UnicornHarpItem;
     }
 
-    private static HumanoidArm holdingArm(AbstractClientPlayer player, Performance p) {
-        return p.hand == InteractionHand.MAIN_HAND ? player.getMainArm() : player.getMainArm().getOpposite();
+    public static boolean isPerforming(AbstractClientPlayer player) {
+        return playing(player, ACTIVE.get(player));
     }
 
     // 平滑抬琴、落琴；手背往返扫过弦面。三个过弦节拍与粒子共用时钟。
@@ -74,23 +76,22 @@ public final class UnicornHarpPerformance {
             var entry = it.next(); var player = entry.getKey(); var p = entry.getValue();
             if (player == null || !playing(player, p)) { it.remove(); continue; }
             while (p.nextBeat < BEATS.length && player.tickCount - p.start >= BEATS[p.nextBeat]) {
-                emitNote(player, p, p.nextBeat++);
+                emitNote(player, p.nextBeat++);
             }
         }
     }
 
-    private static void emitNote(AbstractClientPlayer player, Performance p, int beat) {
+    private static void emitNote(AbstractClientPlayer player, int beat) {
         Minecraft mc = Minecraft.getInstance();
-        int side = holdingArm(player, p) == HumanoidArm.RIGHT ? 1 : -1;
         Vec3 position;
         if (mc.getCameraEntity() == player && mc.options.getCameraType().isFirstPerson()) {
             var camera = mc.gameRenderer.getMainCamera();
             position = camera.getPosition().add(new Vec3(camera.getLookVector()).scale(.94))
-                    .add(new Vec3(camera.getLeftVector()).scale(-side * (.22 + .055 * beat)))
+                    .add(new Vec3(camera.getLeftVector()).scale(.22 + .055 * beat))
                     .add(new Vec3(camera.getUpVector()).scale(-.12 + .045 * beat));
         } else {
             float yaw = player.yBodyRot * Mth.DEG_TO_RAD;
-            double x = -side * (.17 + .055 * beat);
+            double x = .17 + .055 * beat;
             position = player.position().add(x * Mth.cos(yaw) - .52 * Mth.sin(yaw),
                     player.getEyeHeight() - .34 + .045 * beat, x * Mth.sin(yaw) + .52 * Mth.cos(yaw));
         }
@@ -103,13 +104,11 @@ public final class UnicornHarpPerformance {
         if (!playing(player, p) || ageInTicks < player.tickCount - 1) return;
         float t = ageInTicks - p.start, weight = envelope(t), stroke = sweep(t);
         if (weight == 0) return;
-        boolean right = holdingArm(player, p) == HumanoidArm.RIGHT;
-        int sign = right ? 1 : -1;
-        ModelPart holder = right ? model.rightArm : model.leftArm;
-        ModelPart picker = right ? model.leftArm : model.rightArm;
-        float tilt = -1.13F + stroke * .035F, turn = -sign * 1.04F;
+        ModelPart holder = model.leftArm;
+        ModelPart picker = model.rightArm;
+        float tilt = -1.13F + stroke * .035F, turn = 1.04F;
         // 弦在握点的外侧。用托琴臂的局部坐标求另一个肩膀到弦面的方向，避免两手平行挥空。
-        Vector3f target = new Vector3f(-sign * (2.6F + 1.4F * stroke), 7.1F, -2.6F)
+        Vector3f target = new Vector3f(2.6F + 1.4F * stroke, 7.1F, -2.6F)
                 .rotateX(tilt).rotateY(turn).add(holder.x - picker.x, holder.y - picker.y, holder.z - picker.z);
         holder.xRot = Mth.lerp(weight, holder.xRot, tilt);
         holder.yRot = Mth.lerp(weight, holder.yRot, turn);
@@ -122,38 +121,56 @@ public final class UnicornHarpPerformance {
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void alignIdleArms(RenderPlayerEvent.Pre event) {
+        if (!(event.getEntity() instanceof AbstractClientPlayer player) || player.isSpectator()) return;
+        HarpHandLayout layout = HarpHandLayout.of(player);
+        if (layout == HarpHandLayout.VANILLA) return;
+        var model = event.getRenderer().getModel();
+        var mainPose = player.getMainArm() == HumanoidArm.RIGHT ? model.rightArmPose : model.leftArmPose;
+        model.leftArmPose = HumanoidModel.ArmPose.ITEM;
+        model.rightArmPose = layout == HarpHandLayout.MAIN_HARP || isPerforming(player) ? HumanoidModel.ArmPose.EMPTY : mainPose;
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void renderHand(RenderHandEvent event) {
         Minecraft mc = Minecraft.getInstance(); var player = mc.player;
         if (player == null || player.isScoping()) return;
+        HarpHandLayout layout = HarpHandLayout.of(player);
+        if (layout == HarpHandLayout.VANILLA) {
+            // 原版换物有数帧缓存；不要让上一帧的琴闪回右手。
+            if (event.getItemStack().getItem() instanceof UnicornHarpItem) event.setCanceled(true);
+            return;
+        }
         Performance p = ACTIVE.get(player);
-        if (!playing(player, p)) return;
-        if (event.getHand() != p.hand) { event.setCanceled(true); return; }
-        if (!(event.getItemStack().getItem() instanceof UnicornHarpItem)) return;
+        boolean performing = playing(player, p);
+        if (layout.hides(event.getHand(), performing)) { event.setCanceled(true); return; }
+        var stack = player.getItemInHand(event.getHand());
+        if (!(stack.getItem() instanceof UnicornHarpItem)) {
+            if (event.getItemStack().getItem() instanceof UnicornHarpItem) event.setCanceled(true);
+            return;
+        }
         event.setCanceled(true);
-        boolean right = holdingArm(player, p) == HumanoidArm.RIGHT;
-        int sign = right ? 1 : -1;
-        float t = player.tickCount - p.start + event.getPartialTick(), weight = envelope(t), stroke = sweep(t);
+        float t = performing ? player.tickCount - p.start + event.getPartialTick() : 0;
+        float weight = envelope(t), stroke = sweep(t);
         PoseStack pose = event.getPoseStack();
         pose.pushPose();
-        pose.translate(sign * (.56 - .16 * weight), -.52 - .6 * event.getEquipProgress() + .07 * weight, -.72);
-        pose.mulPose(Axis.ZP.rotationDegrees(sign * weight * (7 + 1.6F * stroke)));
-        mc.gameRenderer.itemInHandRenderer.renderItem(player, event.getItemStack(), right
-                ? ItemDisplayContext.FIRST_PERSON_RIGHT_HAND : ItemDisplayContext.FIRST_PERSON_LEFT_HAND,
-                !right, pose, event.getMultiBufferSource(), event.getPackedLight());
+        pose.translate(-.56 + .16 * weight, -.52 + .07 * weight, -.72);
+        pose.mulPose(Axis.ZP.rotationDegrees(-weight * (7 + 1.6F * stroke)));
+        mc.gameRenderer.itemInHandRenderer.renderItem(player, stack, ItemDisplayContext.FIRST_PERSON_LEFT_HAND,
+                true, pose, event.getMultiBufferSource(), event.getPackedLight());
         pose.popPose();
         if (player.isInvisible() || weight <= 0) return;
 
         // 把拨弦手的手端定位在弦面前；身后半截沿视线退到画面下方。
         var renderer = (PlayerRenderer) mc.getEntityRenderDispatcher().getRenderer(player);
         pose.pushPose();
-        pose.translate(sign * Mth.lerp(weight, -.46F, .28F + .085F * stroke),
+        pose.translate(-Mth.lerp(weight, -.46F, .28F + .085F * stroke),
                 Mth.lerp(weight, -.96F, -.16F + .045F * stroke), -.90);
-        pose.mulPose(Axis.ZP.rotationDegrees(sign * -40));
+        pose.mulPose(Axis.ZP.rotationDegrees(40));
         pose.mulPose(Axis.XP.rotationDegrees(-125));
         pose.scale(.78F, .78F, .78F);
-        pose.translate(-sign * .375, -.75, 0);
-        if (right) renderer.renderLeftHand(pose, event.getMultiBufferSource(), event.getPackedLight(), player);
-        else renderer.renderRightHand(pose, event.getMultiBufferSource(), event.getPackedLight(), player);
+        pose.translate(.375, -.75, 0);
+        renderer.renderRightHand(pose, event.getMultiBufferSource(), event.getPackedLight(), player);
         pose.popPose();
     }
 }

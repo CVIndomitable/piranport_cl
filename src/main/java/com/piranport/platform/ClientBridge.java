@@ -38,6 +38,8 @@ public interface ClientBridge {
 
     void triggerCameraShake(float intensity, int durationTicks);
 
+    default void playUnicornHarp(int playerId, InteractionHand hand) {}
+
     void triggerAircraftLaunchPose(int entityId, int skinId, int durationTicks);
 
     default void triggerAircraftLaunchVisual(com.piranport.network.AircraftLaunchVisualPayload payload) {}

@@ -13,6 +13,7 @@ public class ModPackets {
     @SubscribeEvent
     public static void register(RegisterPayloadHandlersEvent event) {
         PayloadRegistrar registrar = event.registrar(PROTOCOL_VERSION);
+        registrar.playToClient(HarpPerformancePayload.TYPE, HarpPerformancePayload.STREAM_CODEC, HarpPerformancePayload::handle);
         registrar.playToClient(AircraftLaunchVisualPayload.TYPE, AircraftLaunchVisualPayload.STREAM_CODEC,
                 AircraftLaunchVisualPayload::handle);
         registrar.playToClient(AircraftLandingVisualPayload.TYPE, AircraftLandingVisualPayload.STREAM_CODEC,

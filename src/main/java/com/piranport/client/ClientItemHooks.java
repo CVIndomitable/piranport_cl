@@ -41,6 +41,11 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
     public ClientItemHooks() {}
 
     @Override
+    public void playUnicornHarp(int playerId, InteractionHand hand) {
+        UnicornHarpPerformance.start(playerId, hand);
+    }
+
+    @Override
     public boolean isClient() { return true; }
 
     @Override

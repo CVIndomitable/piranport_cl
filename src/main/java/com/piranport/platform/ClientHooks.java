@@ -74,6 +74,10 @@ public final class ClientHooks {
         bridge.triggerCameraShake(intensity, durationTicks);
     }
 
+    public static void playUnicornHarp(int playerId, InteractionHand hand) {
+        bridge.playUnicornHarp(playerId, hand);
+    }
+
     public static void triggerAircraftLaunchPose(int entityId, int skinId, int durationTicks) {
         bridge.triggerAircraftLaunchPose(entityId, skinId, durationTicks);
     }

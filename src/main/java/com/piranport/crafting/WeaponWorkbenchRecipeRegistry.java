@@ -432,6 +432,13 @@ public final class WeaponWorkbenchRecipeRegistry {
                 new ItemStack(Items.NETHERITE_SCRAP, 2)),
                 WeaponItems.EQUIPMENT_BLUEPRINTS.get("advanced_sonar").get(), 400);
 
+        add(r, 5, ModItems.DIESEL_ENGINE.get(), List.of(
+                new ItemStack(Items.IRON_INGOT, 8),
+                new ItemStack(Items.COPPER_INGOT, 4),
+                new ItemStack(Items.PISTON, 2),
+                new ItemStack(ModItems.FUEL.get(), 2),
+                new ItemStack(Items.DIAMOND)), null, 200);
+
         // ===== Tab 4: 飞机 =====
         for (var aircraft : CraftableAircraft.ALL) {
             Item airplane = BuiltInRegistries.ITEM.getOptional(PiranPort.modId(aircraft.id())).orElseThrow();

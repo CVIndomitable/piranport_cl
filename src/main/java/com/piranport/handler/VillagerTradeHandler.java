@@ -116,7 +116,7 @@ public class VillagerTradeHandler {
     // ===== 二、皮兰港农夫 =====
     /** 新手/学徒/老手三档种子与作物。 */
     private static final String[] BASIC_SEEDS = {
-            "tomato_seeds", "lettuce_seeds", "onion_seeds", "garlic_seeds"};
+            "tomato_seeds", "lettuce_seeds", "onion_seeds", "garlic_seeds", "ginger"};
     private static final String[] BASIC_CROPS = {"tomato", "lettuce", "onion", "garlic"};
     private static final String[] MID_SEEDS = {
             "soybean_seeds", "chili_seeds", "rice_seeds", "celery_seeds", "pepper_seeds"};

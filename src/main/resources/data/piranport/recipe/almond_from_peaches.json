@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {"tag": "c:crops/peach"},
+    {"tag": "c:crops/peach"}
+  ],
+  "result": {"id": "piranport:almond", "count": 2}
+}

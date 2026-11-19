@@ -239,6 +239,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.LABLAB_BEAN_SEEDS.get());
                         output.accept(ModItems.ORMOSIA_SEEDS.get());
                         output.accept(ModItems.CELERY_SEEDS.get());
+                        output.accept(ModItems.PEPPER_SEEDS.get());
                         output.accept(ModItems.RYE_SEEDS.get());
 
                         // 作物产出

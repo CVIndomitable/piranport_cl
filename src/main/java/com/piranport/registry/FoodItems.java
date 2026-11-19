@@ -84,6 +84,9 @@ public final class FoodItems {
     public static final DeferredItem<ItemNameBlockItem> CHILI_SEEDS =
             ITEMS.register("chili_seeds", () -> new ItemNameBlockItem(
                     ModBlocks.CHILI_CROP.get(), new Item.Properties()));
+    public static final DeferredItem<ItemNameBlockItem> PEPPER_SEEDS =
+            ITEMS.register("pepper_seeds", () -> new ItemNameBlockItem(
+                    ModBlocks.PEPPER_CROP.get(), new Item.Properties()));
     public static final DeferredItem<ItemNameBlockItem> ONION_SEEDS =
             ITEMS.register("onion_seeds", () -> new ItemNameBlockItem(
                     ModBlocks.ONION_CROP.get(), new Item.Properties()));

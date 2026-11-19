@@ -78,6 +78,8 @@ public class ModBlocks {
             BLOCKS.register("soybean_crop", () -> new FourStageCropBlock(cropProps(), () -> ModItems.SOYBEAN_SEEDS.get()));
     public static final DeferredBlock<FourStageCropBlock> CHILI_CROP =
             BLOCKS.register("chili_crop", () -> new FourStageCropBlock(cropProps(), () -> ModItems.CHILI_SEEDS.get()));
+    public static final DeferredBlock<FourStageCropBlock> PEPPER_CROP =
+            BLOCKS.register("pepper_crop", () -> new FourStageCropBlock(cropProps(), () -> ModItems.PEPPER_SEEDS.get()));
     public static final DeferredBlock<FourStageCropBlock> ONION_CROP =
             BLOCKS.register("onion_crop", () -> new FourStageCropBlock(cropProps(), () -> ModItems.ONION_SEEDS.get()));
     public static final DeferredBlock<RiceCropBlock> RICE_CROP =

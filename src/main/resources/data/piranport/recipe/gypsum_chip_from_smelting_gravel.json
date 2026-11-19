@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:smelting",
+  "ingredient": {"item": "minecraft:gravel"},
+  "result": {"id": "piranport:gypsum_chip", "count": 1},
+  "experience": 0.1,
+  "cookingtime": 200
+}

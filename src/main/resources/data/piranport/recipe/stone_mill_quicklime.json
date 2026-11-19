@@ -1,0 +1,6 @@
+{
+  "type": "piranport:stone_mill",
+  "ingredients": [{"item": "minecraft:gravel"}],
+  "result": {"id": "piranport:quicklime", "count": 1},
+  "processingtime": 200
+}

@@ -2,8 +2,10 @@ package com.piranport.client;
 
 import com.piranport.artillery.ArtilleryItem;
 import com.piranport.artillery.config.ArtilleryCannonData;
-import com.piranport.artillery.config.MuzzlePos;
 import com.piranport.combat.BallisticSolver;
+import com.piranport.combat.cannon.CannonMuzzlePositions;
+import com.piranport.rigging.RiggingLoadoutResolver;
+import com.piranport.skin.ClientSkinData;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
@@ -293,7 +295,11 @@ public final class ClientScopeHandler {
 
         Entity camera = mc.getCameraEntity();
         Vec3 eyePos = camera.getEyePosition();
-        Vec3 ballisticOrigin = getReferenceMuzzlePosition(player, weapon, mc.level);
+        // 客户端快捷栏即时切换；在飞空甲板则仍以服务端同步的状态为准。
+        var loadout = RiggingLoadoutResolver.resolve(player, ClientSkinData.getActiveSkin(player.getUUID()),
+                mc.player == player && RiggingClientState.resolveLoadout(mc.player).hasAircraft());
+        Vec3 ballisticOrigin = CannonMuzzlePositions.reference(CannonMuzzlePositions.resolve(
+                player, weapon, player.getInventory().selected, loadout));
         // 手持火炮没有炮塔实体，按策划决策/武器/12 直接使用准星方向。
         Vec3 lookDir = camera.getLookAngle();
 
@@ -357,32 +363,6 @@ public final class ClientScopeHandler {
         }
         // 加 10% 余量用于命中点判定
         return Math.min(maxRange * 1.1, SCOPE_RAYCAST_MAX);
-    }
-
-    private static Vec3 getReferenceMuzzlePosition(Player player, ItemStack weapon, Level level) {
-        Vec3 eyePos = player.getEyePosition();
-        if (!(weapon.getItem() instanceof ArtilleryItem ai)) return eyePos;
-
-        ArtilleryCannonData effectiveData = ai.getEffectiveData(level);
-        List<MuzzlePos> muzzles = effectiveData.muzzles();
-        MuzzlePos muzzle = muzzles.isEmpty() ? new MuzzlePos(0, 0, 1.5) : muzzles.get((muzzles.size() - 1) / 2);
-        return eyePos.add(rotateMuzzleByPlayerView(player, muzzle));
-    }
-
-    private static Vec3 rotateMuzzleByPlayerView(Player player, MuzzlePos muzzle) {
-        double yawRad = Math.toRadians(player.getYRot());
-        double pitchRad = Math.toRadians(player.getXRot());
-
-        double cosYaw = Math.cos(yawRad);
-        double sinYaw = Math.sin(yawRad);
-        double cosPitch = Math.cos(pitchRad);
-        double sinPitch = Math.sin(pitchRad);
-
-        double x = muzzle.x() * cosYaw - muzzle.z() * sinYaw;
-        double y = muzzle.y() * cosPitch + muzzle.z() * sinPitch;
-        double z = muzzle.x() * sinYaw + muzzle.z() * cosYaw * cosPitch;
-
-        return new Vec3(x, y, z);
     }
 
     // ===== Getters =====

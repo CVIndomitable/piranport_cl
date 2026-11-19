@@ -51,7 +51,7 @@ public final class CannonFiring {
         boolean isType3 = isType3Shell(shellForRender);
         boolean isVT = isVTShell(shellForRender);
         boolean isHE = isHEShell(shellForRender) || isVT;
-        var result = fireCannonSalvo(level, player, weapon, shellForRender, loaded.count(),
+        var result = fireCannonSalvo(level, player, weaponSlot, weapon, shellForRender, loaded.count(),
                 isType3, isVT, isHE, aim);
         if (result.shots() == 0) {
             return true;

@@ -4,6 +4,7 @@ import com.piranport.combat.cannon.fire.CannonFireService;
 import com.piranport.combat.cannon.fire.CannonFireRequest;
 import com.piranport.combat.cannon.ammo.AmmoDefinitionService;
 import com.piranport.network.ShakeEffectPayload;
+import com.piranport.rigging.RiggingLoadoutResolver;
 import com.piranport.server.ScopingManager;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -27,10 +28,10 @@ final class CannonProjectiles {
 
     private CannonProjectiles() {}
 
-    static CannonFireService.Result fireCannonSalvo(Level level, Player player, ItemStack weapon,
+    static CannonFireService.Result fireCannonSalvo(Level level, Player player, int weaponSlot, ItemStack weapon,
             ItemStack shell, int barrels, boolean type3, boolean vt, boolean he, CannonAim aim) {
-        var muzzles = getMuzzlePositions(weapon, level);
-        Vec3 aimOrigin = player.getEyePosition().add(CannonAiming.rotateMuzzleByPlayerView(player, muzzles.get((muzzles.size() - 1) / 2)));
+        var muzzles = CannonMuzzlePositions.resolve(player, weapon, weaponSlot, RiggingLoadoutResolver.resolve(player));
+        Vec3 aimOrigin = CannonMuzzlePositions.reference(muzzles);
         float velocity = getProjectileVelocity(weapon, level);
         float horizontal = getHorizontalSpread(weapon, level);
         float vertical = getVerticalSpread(weapon, level);
@@ -43,9 +44,9 @@ final class CannonProjectiles {
                 && AmmoDefinitionService.find(BuiltInRegistries.ITEM.getKey(shell.getItem())).isEmpty()) explosion *= 10f;
         int caliber = ((com.piranport.artillery.ArtilleryItem) weapon.getItem()).getEffectiveData(level).caliber();
         List<CannonFireService.Shot> shots = new ArrayList<>();
+        Vec3 direction = CannonAiming.resolveDirection(player, weapon, velocity, aim, aimOrigin);
         for (int barrel = 0; barrel < barrels; barrel++) {
-            Vec3 spawn = player.getEyePosition().add(CannonAiming.rotateMuzzleByPlayerView(player, muzzles.get(barrel % muzzles.size())));
-            Vec3 direction = CannonAiming.resolveDirection(player, weapon, velocity, aim, aimOrigin, spawn);
+            Vec3 spawn = muzzles.get(barrel % muzzles.size());
             try {
                 CannonFireRequest request = CannonFireService.request(level, player, weapon, shell,
                         getGunDamage(player, weapon, level), explosion, velocity, getProjectileDrag(weapon, level),
@@ -67,8 +68,7 @@ final class CannonProjectiles {
             boolean emitSmoke = !smallCaliber || SMALL_CALIBER_SMOKE.shouldEmit(
                     weapon, serverLevel.getServer().getTickCount());
             for (int barrel = 0; barrel < result.shots(); barrel++) {
-                Vec3 spawn = shots.get(barrel).request().spawnPosition();
-                Vec3 flame = spawn.add(player.getLookAngle().scale(.3));
+                Vec3 flame = shots.get(barrel).request().spawnPosition();
                 serverLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, flame.x, flame.y, flame.z,
                         smallCaliber ? 1 : 3, .2, .2, .2, .05);
                 if (emitSmoke) {

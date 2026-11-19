@@ -48,12 +48,17 @@ public final class RiggingLoadoutResolver {
      * {@code ClientSkinData} 里，不在 ACTIVE_SKIN 附件里）。
      */
     public static RiggingLoadout resolve(Player player, int skinId) {
+        return resolve(player, skinId, false);
+    }
+
+    /** Clients can preserve an airborne deck from the synced snapshot while using their current hotbar. */
+    public static RiggingLoadout resolve(Player player, int skinId, boolean syncedDeck) {
         if (player == null) return RiggingLoadout.EMPTY;
         // 未变身就不挂任何东西；否则挂点会残留在解除变身后的玩家身上。
         if (TransformationManager.findTransformedCore(player).isEmpty()) {
             return RiggingLoadout.EMPTY;
         }
-        boolean airborne = false;
+        boolean airborne = player.level().isClientSide() && syncedDeck;
         boolean returning = false;
         if (!player.level().isClientSide()) {
             for (AircraftEntity craft : AircraftIndex.snapshot(player.getUUID())) {

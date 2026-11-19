@@ -12,13 +12,13 @@ import static com.piranport.combat.cannon.CannonStats.getProjectileGravity;
 import static com.piranport.combat.cannon.CannonStats.getProjectileDrag;
 import static com.piranport.combat.cannon.CannonStats.getMaxHorizontalRange;
 
-/** 火炮瞄准：炮口变换、弹道解算和目标方向。 */
+/** 火炮瞄准：弹道解算和目标方向。 */
 final class CannonAiming {
     private CannonAiming() {}
 
     /** 所有有目标点的指令共用弹道解算，开闭镜只在发射层影响散布。 */
     static Vec3 resolveDirection(Player player, ItemStack weapon, float velocity,
-            CannonAim aim, Vec3 aimOrigin, Vec3 spawnPos) {
+            CannonAim aim, Vec3 aimOrigin) {
         if (aim instanceof CannonAim.Aimed aimed) {
             return computeAimDirection(player, weapon, velocity, aimed.target(), aimOrigin, true);
         }
@@ -40,32 +40,6 @@ final class CannonAiming {
             return new Vec3(-Math.sin(yaw) * cosPitch, Math.sin(pitch), Math.cos(yaw) * cosPitch).normalize();
         }
         return player.getLookAngle();
-    }
-
-    static Vec3 rotateMuzzleByPlayerView(Player player, com.piranport.artillery.config.MuzzlePos muzzle) {
-        // 炮口位置定义：x=左右，y=上下，z=前后（相对武器）
-        Vec3 localOffset = new Vec3(muzzle.x(), muzzle.y(), muzzle.z());
-
-        // 获取玩家视角方向
-        float yaw = player.getYRot();
-        float pitch = player.getXRot();
-
-        // 转换为弧度
-        double yawRad = Math.toRadians(yaw);
-        double pitchRad = Math.toRadians(pitch);
-
-        // 构建旋转矩阵（先俯仰后偏航）
-        double cosYaw = Math.cos(yawRad);
-        double sinYaw = Math.sin(yawRad);
-        double cosPitch = Math.cos(pitchRad);
-        double sinPitch = Math.sin(pitchRad);
-
-        // 应用旋转变换
-        double x = localOffset.x * cosYaw - localOffset.z * sinYaw;
-        double y = localOffset.y * cosPitch + localOffset.z * sinPitch;
-        double z = localOffset.x * sinYaw + localOffset.z * cosYaw * cosPitch;
-
-        return new Vec3(x, y, z);
     }
 
     static Vec3 computeAimDirection(Player player, ItemStack weapon,

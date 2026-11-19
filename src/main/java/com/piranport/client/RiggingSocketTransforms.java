@@ -3,6 +3,7 @@ package com.piranport.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.piranport.config.ModEquipmentConfig;
+import com.piranport.rigging.RiggingGeometry;
 import com.piranport.rigging.RiggingSocket;
 import net.minecraft.client.model.PlayerModel;
 import software.bernie.geckolib.util.RenderUtil;
@@ -23,7 +24,8 @@ public final class RiggingSocketTransforms {
     public static void applyHullBase(PoseStack poseStack, PlayerModel<?> parentModel,
                                      float launchPose) {
         parentModel.body.translateAndRotate(poseStack);
-        poseStack.translate(0.0, 0.28 + launchPose * 0.035, 0.34 - launchPose * 0.035);
+        poseStack.translate(0.0, RiggingGeometry.HULL_DOWN + launchPose * 0.035,
+                RiggingGeometry.HULL_BACK - launchPose * 0.035);
         poseStack.mulPose(Axis.XP.rotationDegrees(-3.0f * launchPose));
     }
 
@@ -84,12 +86,11 @@ public final class RiggingSocketTransforms {
             case LEG_LEFT -> new MountPose(2.6f, 6.0f, 0.0f, 90.0f, 0.0f, 90.0f, 0.40f);
             case LEG_RIGHT -> new MountPose(-2.6f, 6.0f, 0.0f, -90.0f, 0.0f, -90.0f, 0.40f);
             // 底座补偿为 8 × scale；平台顶面 y=1.8，故挂点 y=1.8-3.36。
-            case SIDE_LEFT_1 -> new MountPose(9.5f, -1.56f, -6.0f * forward, 180.0f, 0.0f, 0.0f, 0.42f);
-            case SIDE_LEFT_2 -> new MountPose(9.5f, -1.56f, 6.0f * forward, 180.0f, 0.0f, 0.0f, 0.42f);
-            case SIDE_RIGHT_1 -> new MountPose(-9.5f, -1.56f, -6.0f * forward, 180.0f, 0.0f, 0.0f, 0.42f);
-            // 有甲板时与 carrier_deck 的 main_hand_support 炮座对齐。
-            case SIDE_RIGHT_2 -> new MountPose(showDeck ? -18.5f : -9.5f, -1.56f,
-                    (showDeck ? 18.0f : 6.0f) * forward, 180.0f, 0.0f, 0.0f, 0.42f);
+            case SIDE_LEFT_1, SIDE_LEFT_2, SIDE_RIGHT_1, SIDE_RIGHT_2 -> {
+                var mount = RiggingGeometry.sideMount(socket, showDeck);
+                yield new MountPose(mount.left(), RiggingGeometry.SideMount.DOWN, mount.forward() * forward,
+                        180.0f, 0.0f, 0.0f, RiggingGeometry.SIDE_ITEM_SCALE);
+            }
             case BACK_1 -> new MountPose(2.2f, -0.84f, 3.4f, 90.0f, 0.0f, 0.0f, 0.38f);
             case BACK_2 -> new MountPose(-2.2f, -0.84f, 3.4f, -90.0f, 0.0f, 0.0f, 0.38f);
             case DECK_1, DECK_2 -> new MountPose(RiggingDeckPose.CENTER_X, 0.4f,

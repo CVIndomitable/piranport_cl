@@ -3,96 +3,33 @@ package com.piranport.menu;
 import com.piranport.block.entity.BlueprintChestBlockEntity;
 import com.piranport.block.entity.WeaponWorkbenchBlockEntity;
 import com.piranport.crafting.WeaponWorkbenchRecipeRegistry;
-import com.piranport.registry.ModBlockEntityTypes;
 import com.piranport.registry.ModBlocks;
-import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
-import com.piranport.registry.ModMenuTypes;
-import net.minecraft.SharedConstants;
+import com.piranport.testsupport.ModRegistryFixture;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.MappedRegistry;
-import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.Bootstrap;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.neoforged.neoforge.registries.DeferredHolder;
-import net.neoforged.neoforge.registries.DeferredRegister;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.Field;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * 蓝图收纳箱菜单的可执行回归测试。
- *
- * <p>项目其余测试不启动注册表；这里用 {@link Bootstrap#bootStrap()} + 反射读取各
- * {@link DeferredRegister} 的私有 entries，把它们按真实 supplier 注册进内建注册表，
- * 等价于跑一遍 RegisterEvent。这样 {@code DeferredHolder.get()} 能正常绑定，
- * 才能构造真实的 {@link BlueprintChestBlockEntity} / {@link BlueprintChestMenu}。</p>
- */
+/** 蓝图收纳箱菜单的可执行回归测试。 */
 @Tag("mc-bootstrap")
 class BlueprintChestMenuTest {
 
-    private static boolean bootstrapped;
-
     @BeforeAll
     static void bootstrap() {
-        if (bootstrapped) return;
-        bootstrapped = true;
-
-        SharedConstants.tryDetectVersion();
-        // 纯 JUnit 环境没有 FML 启动流程；FeatureFlags.<clinit> 会读 LoadingModList。
-        // 塞一个空列表进去，加载器就会认为「没有模组声明特性开关」，bootstrap 得以继续。
-        net.neoforged.fml.loading.LoadingModList.of(
-                java.util.List.of(), java.util.List.of(), java.util.List.of(),
-                java.util.List.of(), java.util.Map.of());
-        Bootstrap.bootStrap();
-
-        bindAll(ModDataComponents.DATA_COMPONENTS);
-        bindAll(ModBlocks.BLOCKS);
-        bindAll(ModBlockEntityTypes.BLOCK_ENTITY_TYPES);
-        bindAll(ModItems.ITEMS);
-        bindAll(ModMenuTypes.MENU_TYPES);
-    }
-
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    private static void bindAll(DeferredRegister<?> register) {
-        Registry registry = BuiltInRegistries.REGISTRY.get(register.getRegistryKey().location());
-        assertNotNull(registry, "registry for " + register.getRegistryKey());
-        if (registry instanceof MappedRegistry<?> mapped) {
-            mapped.unfreeze();
-        }
-        Map<DeferredHolder<?, ?>, Supplier<?>> entries = entriesOf(register);
-        for (Map.Entry<DeferredHolder<?, ?>, Supplier<?>> e : entries.entrySet()) {
-            ResourceLocation id = e.getKey().getId();
-            if (registry.containsKey(id)) continue;
-            Object value = e.getValue().get();
-            Registry.register(registry, id, value);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Map<DeferredHolder<?, ?>, Supplier<?>> entriesOf(DeferredRegister<?> register) {
-        try {
-            Field field = DeferredRegister.class.getDeclaredField("entries");
-            field.setAccessible(true);
-            return new LinkedHashMap<>((Map<DeferredHolder<?, ?>, Supplier<?>>) field.get(register));
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException("cannot read DeferredRegister.entries", e);
-        }
+        ModRegistryFixture.bootstrap();
     }
 
     private static BlueprintChestBlockEntity newChest() {

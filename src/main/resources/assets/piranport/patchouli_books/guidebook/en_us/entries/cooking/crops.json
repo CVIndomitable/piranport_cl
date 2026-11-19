@@ -11,6 +11,10 @@
     {
       "type": "patchouli:text",
       "text": "piranport.book.cooking.crops.p2"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.cooking.crops.tea"
     }
   ]
 }

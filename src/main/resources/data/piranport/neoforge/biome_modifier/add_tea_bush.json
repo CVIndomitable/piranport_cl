@@ -1,0 +1,6 @@
+{
+  "type": "neoforge:add_features",
+  "biomes": ["minecraft:forest", "minecraft:birch_forest", "minecraft:flower_forest"],
+  "features": "piranport:patch_tea_bush",
+  "step": "vegetal_decoration"
+}

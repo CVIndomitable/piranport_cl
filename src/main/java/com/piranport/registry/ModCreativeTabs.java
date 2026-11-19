@@ -289,6 +289,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.BLACK_PEPPER.get());
                         output.accept(ModItems.WHITE_PEPPER.get());
                         output.accept(ModItems.GINGER.get());
+                        output.accept(ModItems.TEA_LEAVES.get());
                         output.accept(ModItems.BLACK_TEA.get());
                         output.accept(ModItems.PORK_PASTE.get());
                         output.accept(ModItems.EDIBLE_OIL.get());

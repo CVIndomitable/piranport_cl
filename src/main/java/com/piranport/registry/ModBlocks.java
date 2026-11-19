@@ -13,6 +13,7 @@ import com.piranport.block.SaltChipBlock;
 import com.piranport.block.SmokeScreenBlock;
 import com.piranport.block.StoneMillBlock;
 import com.piranport.block.StoveBlock;
+import com.piranport.block.TeaBushBlock;
 import com.piranport.block.ThreeStageCropBlock;
 import com.piranport.block.YubariWaterBucketBlock;
 import net.minecraft.core.registries.Registries;
@@ -80,6 +81,8 @@ public class ModBlocks {
             BLOCKS.register("chili_crop", () -> new FourStageCropBlock(cropProps(), () -> ModItems.CHILI_SEEDS.get()));
     public static final DeferredBlock<FourStageCropBlock> PEPPER_CROP =
             BLOCKS.register("pepper_crop", () -> new FourStageCropBlock(cropProps(), () -> ModItems.PEPPER_SEEDS.get()));
+    public static final DeferredBlock<TeaBushBlock> TEA_BUSH = BLOCKS.register("tea_bush",
+            () -> new TeaBushBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.SWEET_BERRY_BUSH)));
     public static final DeferredBlock<FourStageCropBlock> ONION_CROP =
             BLOCKS.register("onion_crop", () -> new FourStageCropBlock(cropProps(), () -> ModItems.ONION_SEEDS.get()));
     public static final DeferredBlock<RiceCropBlock> RICE_CROP =

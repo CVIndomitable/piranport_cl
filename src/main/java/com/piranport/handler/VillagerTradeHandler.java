@@ -112,8 +112,8 @@ public class VillagerTradeHandler {
             "tomato_seeds", "lettuce_seeds", "onion_seeds", "garlic_seeds"};
     private static final String[] BASIC_CROPS = {"tomato", "lettuce", "onion", "garlic"};
     private static final String[] MID_SEEDS = {
-            "soybean_seeds", "chili_seeds", "rice_seeds", "celery_seeds"};
-    private static final String[] MID_CROPS = {"soybean", "chili", "rice", "celery"};
+            "soybean_seeds", "chili_seeds", "rice_seeds", "celery_seeds", "pepper_seeds"};
+    private static final String[] MID_CROPS = {"soybean", "chili", "rice", "celery", "white_pepper"};
     private static final String[] HIGH_SEEDS = {"lablab_bean_seeds", "ormosia_seeds", "rye_seeds"};
     private static final String[] HIGH_CROPS = {"lablab_bean", "ormosia", "rye"};
 

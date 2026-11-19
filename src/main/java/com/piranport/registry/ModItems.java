@@ -718,6 +718,7 @@ public class ModItems {
     public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> LABLAB_BEAN_SEEDS = FoodItems.LABLAB_BEAN_SEEDS;
     public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> ORMOSIA_SEEDS = FoodItems.ORMOSIA_SEEDS;
     public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> CELERY_SEEDS = FoodItems.CELERY_SEEDS;
+    public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> PEPPER_SEEDS = FoodItems.PEPPER_SEEDS;
     public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> RYE_SEEDS = FoodItems.RYE_SEEDS;
 
     // ===== Phase 28: Fruit/Tree block items (extracted to FoodItems) =====

@@ -1,0 +1,5 @@
+{
+  "parent": "minecraft:block/crop",
+  "render_type": "minecraft:cutout",
+  "textures": {"crop": "piranport:block/ginger_crop_stage3"}
+}

@@ -1,0 +1,15 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_peach": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {"items": [{"items": "#c:crops/peach"}]}
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {"recipe": "piranport:almond_from_peaches"}
+    }
+  },
+  "requirements": [["has_peach", "has_the_recipe"]],
+  "rewards": {"recipes": ["piranport:almond_from_peaches"]}
+}

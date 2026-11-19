@@ -1,7 +1,7 @@
 {
   "name": "piranport.book.equipment.special",
   "category": "piranport:10_equipment",
-  "icon": "piranport:skin_core_4",
+  "icon": "piranport:spider_gloves",
   "sortnum": 1,
   "pages": [
     {
@@ -11,6 +11,40 @@
     {
       "type": "patchouli:text",
       "text": "$(bold)Equipment Slots$()$(br2)Your ship core has multiple equipment slots:$(br2)• Armor slots for protection$(br)• Engine slots for speed$(br)• Special slots for unique items$(br2)$(bold)Tip:$() Plan your loadout based on mission requirements!"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:unicorn_harp",
+      "recipe2": "piranport:kirin_headband"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:mysterious_weapon",
+      "recipe2": "piranport:richelieu_command_sword"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:eugen_shield"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:spider_gloves",
+      "recipe2": "piranport:blue_jersey"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:red_black_socks",
+      "recipe2": "piranport:miracle_boots"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:smoke_candle",
+      "recipe2": "piranport:flare_launcher"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:floating_target",
+      "recipe2": "piranport:yubari_water_bucket"
     }
   ]
 }

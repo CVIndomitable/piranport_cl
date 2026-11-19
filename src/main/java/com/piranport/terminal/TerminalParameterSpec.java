@@ -74,6 +74,12 @@ public record TerminalParameterSpec(String key, String group, String target, Str
         if (type != ValueType.DOUBLE) return raw;
         try {
             double parsed = Double.parseDouble(raw);
+            // 目录中的不少数值来自 float 字段（例如鱼雷航速 0.3f），先还原
+            // float 的最短十进制表示，再做单位换算，避免 0.3f * 20 变成
+            // 6.000000238418579 这种二进制尾数泄漏到终端。
+            if ((double) (float) parsed == parsed) {
+                parsed = Double.parseDouble(Float.toString((float) parsed));
+            }
             double value = parsed * displayScale();
             // drag_coeff 保留科学计数法；其余全部走 tidyDecimal 去二进制尾数。
             // 原先 isLinearSpeed 用 %.6f——%.6f 写死 6 位小数，既会产生 4.600000

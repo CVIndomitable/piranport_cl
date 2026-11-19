@@ -62,6 +62,14 @@ class TerminalParameterSpecTest {
     }
 
     @Test
+    void floatSpeedWideningNoiseIsRemovedBeforeUnitConversion() {
+        TerminalParameterSpec speed = new TerminalParameterSpec("torpedo.test.speed",
+                "torpedo", "test", "speed", TerminalParameterSpec.ValueType.DOUBLE,
+                Double.toString((double) 0.3f), 0.01, 10);
+        assertEquals("6", speed.displayValue(Double.toString((double) 0.3f)));
+    }
+
+    @Test
     void specialCaseFormatsAreNotAffected() {
         TerminalParameterSpec drag = new TerminalParameterSpec("cannon.test.drag_coeff",
                 "cannon", "test", "drag_coeff", TerminalParameterSpec.ValueType.DOUBLE,

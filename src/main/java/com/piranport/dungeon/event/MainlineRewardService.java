@@ -307,6 +307,7 @@ public final class MainlineRewardService {
 
     private static void giveBossDrops(ServerPlayer player, String stageId, List<String> result) {
         switch (stageId) {
+            case "3-4" -> give(player, "piranport:high_pressure_boiler", 1, result);
             case "4-4" -> give(player, "piranport:japanese_triple_460mm_gun", 1, result);
             case "6-3" -> give(player, "piranport:soviet_triple_460mm_gun", 1, result);
             case "7-3" -> {

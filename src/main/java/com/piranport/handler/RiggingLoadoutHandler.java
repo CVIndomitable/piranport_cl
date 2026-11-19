@@ -41,7 +41,10 @@ public final class RiggingLoadoutHandler {
     @SubscribeEvent
     public static void onPlayerTick(PlayerTickEvent.Post event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
-        if (player.tickCount % SYNC_INTERVAL != 0) return;
+        if (player.tickCount % SYNC_INTERVAL != 0
+                && (!player.hasData(ModAttachmentTypes.RIGGING_LOADOUT)
+                || player.getData(ModAttachmentTypes.RIGGING_LOADOUT.get()).selectedSlot()
+                == player.getInventory().selected)) return;
         refresh(player);
     }
 

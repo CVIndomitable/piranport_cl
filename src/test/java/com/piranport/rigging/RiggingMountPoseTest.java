@@ -65,6 +65,16 @@ class RiggingMountPoseTest {
     }
 
     @Test
+    void forwardAircraftSocketStaysAheadOfRearSocketInBothViews() {
+        for (boolean firstPerson : new boolean[]{false, true}) {
+            float direction = firstPerson ? 1 : -1;
+            float front = direction * RiggingDeckPose.aircraftZ(RiggingSocket.DECK_1, firstPerson);
+            float rear = direction * RiggingDeckPose.aircraftZ(RiggingSocket.DECK_2, firstPerson);
+            assertTrue(rear < 0 && front > 0 && front < RiggingDeckPose.EDGE_Z);
+        }
+    }
+
+    @Test
     void breathingIsContinuousAndPeriodic() {
         assertEquals(0, RiggingSocketTransforms.breathingOffset(0), 1e-6);
         assertEquals(0.35f / 16, RiggingSocketTransforms.breathingOffset(20), 1e-6);

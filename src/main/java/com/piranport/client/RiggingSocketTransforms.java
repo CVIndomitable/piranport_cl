@@ -89,8 +89,8 @@ public final class RiggingSocketTransforms {
             case SIDE_RIGHT_2 -> new MountPose(-9.5f, -1.56f, -6.0f, 180.0f, 0.0f, 0.0f, 0.42f);
             case BACK_1 -> new MountPose(2.2f, -0.84f, 3.4f, 90.0f, 0.0f, 0.0f, 0.38f);
             case BACK_2 -> new MountPose(-2.2f, -0.84f, 3.4f, -90.0f, 0.0f, 0.0f, 0.38f);
-            case DECK_1 -> new MountPose(RiggingDeckPose.CENTER_X, 0.4f, RiggingDeckPose.aircraftZ(true), 0.0f, -90.0f, 0.0f, 0.34f);
-            case DECK_2 -> new MountPose(RiggingDeckPose.CENTER_X, 0.4f, RiggingDeckPose.aircraftZ(false), 0.0f, -90.0f, 0.0f, 0.34f);
+            case DECK_1, DECK_2 -> new MountPose(RiggingDeckPose.CENTER_X, 0.4f,
+                    RiggingDeckPose.aircraftZ(socket, false), 0.0f, -90.0f, 0.0f, 0.34f);
             // 底面转向腿侧，原模型上方转向舷外；补偿随侧翻改沿 X，底座贴支架 x=±8。
             case WAIST_LEFT -> new MountPose(10.88f, 9.0f, 2.0f, 180.0f, 0.0f, -90.0f, 0.36f);
             case WAIST_RIGHT -> new MountPose(-10.88f, 9.0f, 2.0f, 180.0f, 0.0f, 90.0f, 0.36f);

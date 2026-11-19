@@ -1,7 +1,6 @@
 package com.piranport.client;
 
 import com.piranport.combat.TransformationManager;
-import com.piranport.item.AircraftItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.registry.ModAttachmentTypes;
 import com.piranport.rigging.RiggingCategory;
@@ -59,8 +58,7 @@ public final class RiggingClientState {
      *
      * <p>规则：
      * <ul>
-     *   <li>主手：舰装武器（炮/鱼雷/导弹/深弹，即 {@link RiggingCategory#resolve}
-     *       非 null）隐藏，因为它们只出现在舰装挂点上；飞机例外，要拿在手里放飞；
+     *   <li>主手：舰装武器（包括飞机）只画在舰装挂点上；
      *       工具/食物/方块等普通物品原版正常显示</li>
      *   <li>副手：只有变身核心 {@link ShipCoreItem} 隐藏（它是舰装核心，不是手持物）；
      *       其它副手物品正常显示</li>
@@ -70,7 +68,6 @@ public final class RiggingClientState {
                                            ItemStack stack) {
         if (!isRenderedAsTransformed(player)) return false;
         if (mainHand) {
-            if (stack.getItem() instanceof AircraftItem) return false;
             return RiggingCategory.resolve(stack) != null;
         }
         return stack.getItem() instanceof ShipCoreItem;

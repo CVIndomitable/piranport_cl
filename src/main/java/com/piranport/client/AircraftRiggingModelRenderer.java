@@ -175,14 +175,11 @@ public final class AircraftRiggingModelRenderer {
     /**
      * 把 poseStack 移到 DECK_1 / DECK_2 的飞机落点。
      *
-     * <p>调用方必须已经在「+Y 上、+Z 船首、+X 左舷」的舰装模型坐标系里。
-     * x/z 取 {@link RiggingSocketTransforms#mountPose} 的甲板挂点，y 用甲板顶面：
-     * 挂点自带的 {@code pitch=-90} 和 y=0.4 是给平面物品图标用的，3D 飞机不能套。
+     * <p>调用方已应用甲板俯仰。第一人称 +Z 朝前，第三人称 -Z 朝前。
      */
-    public static void translateToDeck(PoseStack poseStack, RiggingSocket socket) {
-        RiggingSocketTransforms.MountPose pose =
-                RiggingSocketTransforms.mountPose(socket, 0.0f);
-        poseStack.translate(pose.x() / 16.0f, RiggingDeckPose.AIRCRAFT_Y / 16.0f, pose.z() / 16.0f);
+    public static void translateToDeck(PoseStack poseStack, RiggingSocket socket, boolean firstPerson) {
+        poseStack.translate(RiggingDeckPose.CENTER_X / 16, RiggingDeckPose.AIRCRAFT_Y / 16,
+                RiggingDeckPose.aircraftZ(socket, firstPerson) / 16);
     }
 
     private static Map<AircraftVisualRegistry.ModelKind, EntityModel<AircraftEntity>> models() {

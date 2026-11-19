@@ -60,8 +60,7 @@ public final class RiggingLoadoutResolver {
     /**
      * 挂点分配规则（只依赖快捷栏内容，便于单元测试与两端复用）：
      * <ol>
-     *   <li>主手是主炮 / 反舰导弹时，该槽最先占位；其余情况（主手是鱼雷、深弹、
-     *       防空导弹或飞机）不特殊提前，所有武器按快捷栏 0→8 顺序</li>
+     *   <li>主手是主炮、反舰导弹或飞机时，该槽最先占用同类挂点；其余按快捷栏 0→8 顺序</li>
      *   <li>鱼雷 → 腰部左、右</li>
      *   <li>主炮 / 反舰导弹 / 火箭弹 → 按固定顺序占舷侧炮位：
      *       <b>右前 → 左前 → 右后 → 左后</b>。主手是主炮/反舰导弹时该槽排最前，
@@ -91,30 +90,13 @@ public final class RiggingLoadoutResolver {
             }
         }
 
-        // 只有主手是主炮/反舰导弹时才把它排到最前。
-        // WHY：主炮/反舰导弹是「看得见的主武器」，主手必须出现在最前面的舷侧炮位；
-        // 鱼雷/深弹/防空导弹走各自的分类挂点（腰部/背部），按自然顺序即可，
-        // 否则主手一换整套挂点就会重排，观感上很乱。
+        // 各类别的挂点独立计数，提前主手只会改变它所在类别的分配。
         RiggingCategory selectedCategory = selectedSlot >= 0 && selectedSlot < HOTBAR_SIZE
                 ? RiggingCategory.resolve(inventory.items.get(selectedSlot))
                 : null;
-        boolean selectedIsSurfaceWeapon = selectedCategory == RiggingCategory.CANNON
-                || selectedCategory == RiggingCategory.MISSILE_ASM;
-        if (selectedIsSurfaceWeapon) {
-            // 选中槽排到最前；其余保持快捷栏顺序（List.sort 稳定）。
+        if (selectedCategory == RiggingCategory.CANNON || selectedCategory == RiggingCategory.MISSILE_ASM
+                || selectedCategory == RiggingCategory.AIRCRAFT) {
             candidates.sort(Comparator.comparingInt(candidate ->
-                    candidate.slot() == selectedSlot ? -1 : candidate.slot()));
-        }
-
-        // 主手飞机固定停在甲板前方（DECK_1）。放飞视觉从该机位交接到真实实体，
-        // 如果主手飞机落到后方机位，飞机会先穿过甲板/舰装再进入放飞轨迹。
-        // 只调整飞机之间的分配顺序，不改变其它类别按快捷栏顺序分配的规则。
-        List<Candidate> aircraftCandidates = candidates.stream()
-                .filter(candidate -> candidate.category() == RiggingCategory.AIRCRAFT)
-                .toList();
-        if (selectedCategory == RiggingCategory.AIRCRAFT && aircraftCandidates.size() > 1) {
-            aircraftCandidates = new ArrayList<>(aircraftCandidates);
-            aircraftCandidates.sort(Comparator.comparingInt(candidate ->
                     candidate.slot() == selectedSlot ? -1 : candidate.slot()));
         }
 
@@ -137,13 +119,7 @@ public final class RiggingLoadoutResolver {
                         : null;
             };
             if (socket != null) {
-                Candidate mountCandidate = candidate;
-                if (candidate.category() == RiggingCategory.AIRCRAFT
-                        && selectedCategory == RiggingCategory.AIRCRAFT) {
-                    mountCandidate = aircraftCandidates.get(deck - 1);
-                }
-                mounts.add(new RiggingMount(socket, mountCandidate.category(), mountCandidate.stack(),
-                        mountCandidate.slot()));
+                mounts.add(new RiggingMount(socket, candidate.category(), candidate.stack(), candidate.slot()));
             }
         }
 

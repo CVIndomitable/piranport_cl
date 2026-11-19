@@ -145,7 +145,7 @@ public final class AircraftLandingVisualClientState {
                     break;
                 }
             }
-            float parkZ = RiggingDeckPose.aircraftZ(socket == RiggingSocket.DECK_1) / 16;
+            float parkZ = RiggingDeckPose.aircraftZ(socket, firstPerson) / 16;
             float touchZ = (firstPerson ? -RiggingDeckPose.EDGE_Z : RiggingDeckPose.EDGE_Z) / 16;
             poses.pushPose();
             RiggingSocketTransforms.applyDeckPose(poses, deckPitch, firstPerson);

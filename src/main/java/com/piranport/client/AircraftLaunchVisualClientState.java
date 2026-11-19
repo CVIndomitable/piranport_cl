@@ -92,6 +92,13 @@ public final class AircraftLaunchVisualClientState {
         return false;
     }
 
+    static boolean usesForwardSlot(int launcherId, float partialTick) {
+        cleanup();
+        return level != null && FLIGHTS.values().stream().anyMatch(f -> validLauncher(f, launcherId)
+                && f.packet.socketId() == RiggingSocket.DECK_1.ordinal()
+                && age(f, partialTick) >= 0 && age(f, partialTick) < f.timeline.departureTick());
+    }
+
     public static void renderDeckAircraft(int launcherId, PoseStack poses, MultiBufferSource buffers,
                                           int light, float partialTick, boolean firstPerson) {
         cleanup();
@@ -114,7 +121,7 @@ public final class AircraftLaunchVisualClientState {
             Vector3f forward = poses.last().pose().transformDirection(new Vector3f(0, 0, firstPerson ? 1 : -1));
             f.yaw = (float) Math.toDegrees(Math.atan2(-forward.x, forward.z));
             f.pitch = (float) Math.toDegrees(Math.atan2(-forward.y, Math.hypot(forward.x, forward.z)));
-            float startZ = RiggingDeckPose.aircraftZ(f.packet.socketId() == RiggingSocket.DECK_1.ordinal()) / 16;
+            float startZ = RiggingDeckPose.aircraftZ(RiggingSocket.byId(f.packet.socketId()), firstPerson) / 16;
             poses.translate(RiggingDeckPose.CENTER_X / 16, RiggingDeckPose.AIRCRAFT_Y / 16,
                     Mth.lerp(f.timeline.roll(age), startZ, edgeZ));
             AircraftRiggingModelRenderer.render(f.packet.visualId(), poses, buffers, light,

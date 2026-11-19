@@ -29,7 +29,9 @@ public enum RiggingSocket {
     SIDE_RIGHT_1,
     /** 右前炮位（主手优先落点）。 */
     SIDE_RIGHT_2,
+    /** 前机位，优先给主手飞机。 */
     DECK_1,
+    /** 后机位。 */
     DECK_2,
     BACK_1,
     BACK_2,

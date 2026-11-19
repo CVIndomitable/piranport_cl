@@ -22,7 +22,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * 必须按「哪只手 + 手里是什么」逐个判断。规则集中在
  * {@link RiggingClientState#isHandItemHidden}，与第一人称共用。
  *
- * <p>要点：主手舰载机仍显示（要拿在手里放飞）；副手只隐藏变身核心。
+ * <p>要点：主手舰载机只在甲板上显示；副手只隐藏变身核心。
  */
 @Mixin(ItemInHandLayer.class)
 public class ItemInHandLayerMixin {

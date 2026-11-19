@@ -63,6 +63,6 @@ Minecraft mod based on Warship Girls R (战舰少女R).
     ordering="AFTER"
     side="BOTH"
 
-# 客户端 mixin：第三人称隐藏变身玩家的手持物品（主手飞机除外）。
+# 客户端 mixin：第三人称隐藏变身玩家的手持舰装武器。
 [[mixins]]
     config = "piranport.mixins.json"

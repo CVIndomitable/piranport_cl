@@ -111,7 +111,9 @@ public class AircraftFireStrategy {
                 loadout = RiggingLoadoutResolver.assign(inv, SkinManager.getActiveSkin(player));
                 mount = loadout.mounts().stream().filter(m -> m.sourceSlot() == weaponSlot).findFirst();
             }
-            RiggingSocket socket = mount.map(RiggingMount::socket).orElse(RiggingSocket.DECK_1);
+            // 选中后立刻右键时，挂点快照可能还没同步新主手；手动放飞仍走前机位。
+            RiggingSocket socket = weaponSlot == inv.selected ? RiggingSocket.DECK_1
+                    : mount.map(RiggingMount::socket).orElse(RiggingSocket.DECK_1);
             PacketDistributor.sendToPlayersNear(serverLevel, null, player.getX(), player.getY(), player.getZ(),
                     Math.max(48.0, serverLevel.getServer().getPlayerList().getSimulationDistance() * 16.0),
                     new AircraftLaunchVisualPayload(player.getId(), player.getUUID(),

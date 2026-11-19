@@ -128,7 +128,7 @@ public class ClientGameEvents {
      * <ul>
      *   <li>侦察模式：全部隐藏（摄像机在飞机上）</li>
      *   <li>已变身：只隐藏「已挂在舰装上」的武器（判断同第三人称，见
-     *       {@link RiggingClientState#isHandItemHidden}）；主手飞机保留，
+     *       {@link RiggingClientState#isHandItemHidden}）；关闭第一人称舰装时仍显示手持飞机，
      *       副手变身核心隐藏，工具/食物/方块等普通物品原版显示</li>
      * </ul>
      */
@@ -141,6 +141,8 @@ public class ClientGameEvents {
         net.minecraft.client.player.AbstractClientPlayer player = Minecraft.getInstance().player;
         if (player == null) return;
         boolean mainHand = event.getHand() == net.minecraft.world.InteractionHand.MAIN_HAND;
+        if (mainHand && event.getItemStack().getItem() instanceof com.piranport.item.AircraftItem
+                && !com.piranport.config.ModEquipmentConfig.RIGGING_FP_ENABLED.get()) return;
         if (RiggingClientState.isHandItemHidden(player, mainHand, event.getItemStack())) {
             event.setCanceled(true);
         }

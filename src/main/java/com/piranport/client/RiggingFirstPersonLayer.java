@@ -205,8 +205,9 @@ public final class RiggingFirstPersonLayer {
     private static void renderWeapons(PoseStack poseStack, MultiBufferSource.BufferSource bufferSource,
                                       int packedLight, float partialTick,
                                       AbstractClientPlayer player, RiggingLoadout loadout) {
-        for (RiggingMount mount : loadout.mounts()) {
-            if (RiggingDeckClientState.shouldHideMount(player.getId(), mount)) continue;
+        for (RiggingMount original : loadout.mounts()) {
+            RiggingMount mount = RiggingDeckClientState.parkedMount(player.getId(), loadout, original, partialTick);
+            if (mount == null) continue;
             if (RiggingDeckClientState.hasActiveAnimation(player.getId())
                     && (mount.socket() == RiggingSocket.SIDE_RIGHT_1
                     || mount.socket() == RiggingSocket.SIDE_RIGHT_2)) continue;
@@ -248,7 +249,7 @@ public final class RiggingFirstPersonLayer {
         poseStack.pushPose();
         RiggingSocketTransforms.applyFirstPersonBreathing(poseStack, mount.socket());
         RiggingSocketTransforms.applyDeckPose(poseStack, deckPitch, true);
-        AircraftRiggingModelRenderer.translateToDeck(poseStack, mount.socket());
+        AircraftRiggingModelRenderer.translateToDeck(poseStack, mount.socket(), true);
         boolean rendered = AircraftRiggingModelRenderer.render(
                 mount.stack(), poseStack, bufferSource, packedLight,
                 AircraftRiggingModelRenderer.DECK_SCALE);
@@ -295,9 +296,9 @@ public final class RiggingFirstPersonLayer {
                                          RiggingMount mount, RiggingSocketTransforms.MountPose pose) {
         poseStack.pushPose();
         RiggingSocketTransforms.applyFirstPersonBreathing(poseStack, mount.socket());
-        poseStack.translate(pose.x() / 16.0f, -pose.y() / 16.0f, pose.z() / 16.0f);
-
         boolean flatIcon = isDeckSocket(mount.socket());
+        poseStack.translate(pose.x() / 16.0f, -pose.y() / 16.0f,
+                (flatIcon ? RiggingDeckPose.aircraftZ(mount.socket(), true) : pose.z()) / 16.0f);
         if (flatIcon) {
             poseStack.mulPose(Axis.YP.rotationDegrees(pose.yaw()));
             poseStack.mulPose(Axis.XP.rotationDegrees(-pose.pitch()));

@@ -1,0 +1,27 @@
+{
+  "loader": "neoforge:separate_transforms",
+  "gui_light": "front",
+  "textures": {
+    "particle": "piranport:item/bofors_twin_120mm_gun"
+  },
+  "base": {
+    "parent": "minecraft:item/generated",
+    "textures": {
+      "layer0": "piranport:item/bofors_twin_120mm_gun"
+    }
+  },
+  "perspectives": {
+    "firstperson_lefthand": {
+      "parent": "piranport:item/bofors_twin_120mm_gun_held"
+    },
+    "firstperson_righthand": {
+      "parent": "piranport:item/bofors_twin_120mm_gun_held"
+    },
+    "thirdperson_lefthand": {
+      "parent": "piranport:item/bofors_twin_120mm_gun_held"
+    },
+    "thirdperson_righthand": {
+      "parent": "piranport:item/bofors_twin_120mm_gun_held"
+    }
+  }
+}

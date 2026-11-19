@@ -36,6 +36,8 @@ public class ModBrewingRecipes {
         // Phase 28: bread-based kvass (replaces/augments cooking_pot kvass)
         builder.addRecipe(customTo(ModItems.YEAST.get(), Items.BREAD, ModItems.KVASS.get()));
         builder.addRecipe(customTo(ModItems.YEAST.get(), ModItems.NEW_RYE_BREAD.get(), ModItems.KVASS.get()));
+
+        builder.addRecipe(customTo(ModItems.YEAST.get(), ModItems.TEA_LEAVES.get(), ModItems.BLACK_TEA.get()));
     }
 
     private static IBrewingRecipe waterBottleTo(net.minecraft.world.item.Item ingredient,
@@ -53,7 +55,7 @@ public class ModBrewingRecipes {
 
             @Override
             public ItemStack getOutput(ItemStack input, ItemStack ing) {
-                return new ItemStack(output);
+                return isInput(input) && isIngredient(ing) ? new ItemStack(output) : ItemStack.EMPTY;
             }
         };
     }
@@ -70,7 +72,7 @@ public class ModBrewingRecipes {
 
             @Override
             public ItemStack getOutput(ItemStack inp, ItemStack ing) {
-                return new ItemStack(output);
+                return isInput(inp) && isIngredient(ing) ? new ItemStack(output) : ItemStack.EMPTY;
             }
         };
     }

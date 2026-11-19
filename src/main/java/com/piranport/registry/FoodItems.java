@@ -486,6 +486,8 @@ public final class FoodItems {
     public static final DeferredItem<Item> CURRY_POWDER        = ITEMS.registerSimpleItem("curry_powder");
     public static final DeferredItem<Item> GINGER              = ITEMS.registerSimpleItem("ginger");
     public static final DeferredItem<Item> BLACK_TEA           = ITEMS.registerSimpleItem("black_tea");
+    public static final DeferredItem<ItemNameBlockItem> TEA_LEAVES = ITEMS.register("tea_leaves",
+            () -> new ItemNameBlockItem(ModBlocks.TEA_BUSH.get(), new Item.Properties()));
     public static final DeferredItem<Item> SALAMI              = ITEMS.registerSimpleItem("salami");
     public static final DeferredItem<Item> SLICED_SALAMI       = ITEMS.registerSimpleItem("sliced_salami");
     public static final DeferredItem<Item> ALMOND              = ITEMS.registerSimpleItem("almond");

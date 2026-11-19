@@ -760,6 +760,7 @@ public class ModItems {
     public static final DeferredItem<Item> CURRY_POWDER = FoodItems.CURRY_POWDER;
     public static final DeferredItem<Item> GINGER = FoodItems.GINGER;
     public static final DeferredItem<Item> BLACK_TEA = FoodItems.BLACK_TEA;
+    public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> TEA_LEAVES = FoodItems.TEA_LEAVES;
     public static final DeferredItem<Item> SALAMI = FoodItems.SALAMI;
     public static final DeferredItem<Item> SLICED_SALAMI = FoodItems.SLICED_SALAMI;
     public static final DeferredItem<Item> ALMOND = FoodItems.ALMOND;

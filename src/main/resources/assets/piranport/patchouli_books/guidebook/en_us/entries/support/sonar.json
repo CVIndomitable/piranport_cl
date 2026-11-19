@@ -10,6 +10,14 @@
     },
     {
       "type": "patchouli:text",
+      "text": "$(bold)Improved Sonar$()$(br2)In the Weapon Workbench's Equipment tab, use its blueprint with 8 iron ingots, 4 copper ingots, 1 comparator, 4 prismarine crystals and 1 diamond. Takes 15 seconds.$(br2)Find the reusable blueprint in the 6-1 clear reward pool, Nether fortresses or ancient cities."
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Advanced Sonar$()$(br2)Use its blueprint with 8 iron ingots, 4 copper ingots, 1 comparator, 1 conduit and 2 netherite scraps. Takes 20 seconds; no lower-tier sonar is needed.$(br2)Find the reusable blueprint in the 7-1 and 7-3 clear reward pools or in End cities."
+    },
+    {
+      "type": "patchouli:text",
       "text": "$(bold)Notes$()$(br2)The sonar marks all aquatic and living non-player creatures — it does not distinguish friend from foe, and does not mark players.$(br2)Best paired with torpedoes and depth charges: confirm the underwater contact first, then fire or close in to drop charges."
     }
   ]

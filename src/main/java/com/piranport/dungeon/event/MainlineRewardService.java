@@ -135,12 +135,12 @@ public final class MainlineRewardService {
         m.put("5-4", List.of("us_triple_14inch_gun_kai", "british_quad_14inch_gun_284"));
         m.put("6-1", List.of("italian_triple_381mm_gun_kai", "german_twin_406mm_gun",
                 "us_triple_16inch_gun_mk7", "german_skc40_triple_420mm_gun",
-                "advanced_fire_control_radar"));
+                "advanced_fire_control_radar", "improved_sonar"));
         m.put("6-2", List.of("ship_rocket_launcher", "seacat_launcher", "sea_dart_launcher"));
         m.put("6-3", List.of("japanese_sextuple_61cm_torpedo"));
         m.put("6-4", List.of("seiun_kai_bomber", "b25_bomber", "reppu", "seafang", "xf5u"));
         m.put("7-1", List.of("terrier_launcher", "mk14_harpoon_launcher",
-                "wyvern", "f4u7", "skyraider"));
+                "wyvern", "f4u7", "skyraider", "advanced_sonar"));
         m.put("7-2", List.of("sy1_launcher", "tenga", "ryusei"));
         m.put("7-4", Objects.requireNonNull(MISSILE_LAUNCHER_BLUEPRINTS));
         m.put("7-5", Objects.requireNonNull(MISSILE_LAUNCHER_BLUEPRINTS));

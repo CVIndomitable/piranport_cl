@@ -231,7 +231,7 @@ public class VillagerTradeHandler {
 
     /**
      * 武器匠老手档的改良蓝图池：火炮、鱼雷管、飞机，外加三式弹蓝图。
-     * 按稀有度取改良档，再排除雷达、引擎、深弹投射器和近防炮——近防炮蓝图走主线 2-1，不进这个池。
+     * 声纳、雷达、引擎、深弹投射器和近防炮的蓝图不进武器匠的交易池。
      */
     private static List<Supplier<? extends ItemLike>> improvedWeaponBlueprints() {
         Set<String> ciws = WeaponItems.CIWS_ITEMS.stream()
@@ -240,7 +240,8 @@ public class VillagerTradeHandler {
         List<Supplier<? extends ItemLike>> out = new ArrayList<>();
         for (var entry : WeaponItems.EQUIPMENT_BLUEPRINTS.entrySet()) {
             String id = entry.getKey();
-            if (id.contains("radar") || id.contains("engine") || id.contains("depth_charge") || ciws.contains(id)) {
+            if (id.contains("radar") || id.endsWith("_sonar") || id.contains("engine")
+                    || id.contains("depth_charge") || ciws.contains(id)) {
                 continue;
             }
             Item blueprint = entry.getValue().get();

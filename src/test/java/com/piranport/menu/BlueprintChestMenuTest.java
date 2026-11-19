@@ -351,6 +351,37 @@ class BlueprintChestMenuTest {
         }
     }
 
+    @Test
+    void sonarCraftingRequiresTheMatchingBlueprintAndAllMaterials() {
+        var recipes = WeaponWorkbenchRecipeRegistry.getRecipesForTab(5);
+        for (boolean advanced : List.of(false, true)) {
+            String id = advanced ? "advanced_sonar" : "improved_sonar";
+            var result = advanced ? ModItems.ADVANCED_SONAR.get() : ModItems.IMPROVED_SONAR.get();
+            var recipe = recipes.stream().filter(r -> r.result() == result).findFirst().orElseThrow();
+            assertTrue(WeaponWorkbenchRecipeRegistry.unlocked(recipe, 0), id);
+            assertEquals(advanced ? 400 : 300, recipe.craftingTime(), id);
+            var bench = new WeaponWorkbenchBlockEntity(BlockPos.ZERO, ModBlocks.WEAPON_WORKBENCH.get().defaultBlockState());
+            bench.setSelectedTab(5);
+            bench.setSelectedRecipe(recipes.indexOf(recipe));
+            var inputs = List.of(new ItemStack(Items.IRON_INGOT, 8), new ItemStack(Items.COPPER_INGOT, 4),
+                    new ItemStack(Items.COMPARATOR), advanced ? new ItemStack(Items.CONDUIT) : new ItemStack(Items.PRISMARINE_CRYSTALS, 4),
+                    advanced ? new ItemStack(Items.NETHERITE_SCRAP, 2) : new ItemStack(Items.DIAMOND));
+            var slots = bench.getItemHandler();
+            for (int i = 0; i < inputs.size(); i++) slots.setStackInSlot(WeaponWorkbenchBlockEntity.MATERIAL_START + i, inputs.get(i));
+            assertFalse(bench.startCrafting(), id);
+            String other = advanced ? "improved_sonar" : "advanced_sonar";
+            slots.setStackInSlot(WeaponWorkbenchBlockEntity.BLUEPRINT_SLOT, BuiltInRegistries.ITEM
+                    .getOptional(ResourceLocation.parse("piranport:" + other + "_blueprint")).orElseThrow().getDefaultInstance());
+            assertFalse(bench.startCrafting(), id);
+            slots.setStackInSlot(WeaponWorkbenchBlockEntity.BLUEPRINT_SLOT, BuiltInRegistries.ITEM
+                    .getOptional(ResourceLocation.parse("piranport:" + id + "_blueprint")).orElseThrow().getDefaultInstance());
+            slots.setStackInSlot(WeaponWorkbenchBlockEntity.MATERIAL_START, new ItemStack(Items.IRON_INGOT, 7));
+            assertFalse(bench.startCrafting(), id);
+            slots.setStackInSlot(WeaponWorkbenchBlockEntity.MATERIAL_START, inputs.getFirst());
+            assertTrue(bench.startCrafting(), id);
+        }
+    }
+
     /** 同一种蓝图不允许放进第二个格子（策划决策 资源/01）。 */
     @Test
     void duplicateBlueprintIsRejectedByHandler() {

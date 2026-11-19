@@ -1,12 +1,20 @@
 {
   "name": "piranport.book.advanced.sonar",
   "category": "piranport:11_support",
-  "icon": "piranport:sonar",
+  "icon": "piranport:standard_sonar",
   "sortnum": 0,
   "pages": [
     {
       "type": "patchouli:text",
       "text": "$(bold)何时能做$()$(br2)$(item)标准型声呐$()从 4-2 通关起可以合成，不要蓝图。此前合成台不给出。装进正在变身的舰装核心，不占快捷栏。"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)改进型声纳$()$(br2)在武器制造台的装备页放入专属蓝图、铁锭 ×8、铜锭 ×4、比较器 ×1、海晶砂粒 ×4 和钻石 ×1，15 秒制成。$(br2)蓝图可从 6-1 通关奖励、下界堡垒或远古城市宝箱获得，可重复使用。"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)先进型声纳$()$(br2)在同一页放入专属蓝图、铁锭 ×8、铜锭 ×4、比较器 ×1、潮涌核心 ×1 和下界合金碎片 ×2，20 秒制成。$(br2)蓝图可从 7-1、7-3 通关奖励或末地城宝箱获得。不需要先做改进型。"
     },
     {
       "type": "patchouli:text",

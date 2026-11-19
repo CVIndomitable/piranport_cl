@@ -119,6 +119,10 @@ class TorpedoReloadGateTest {
         // 供 WeaponReloadDecorator 复用同一套"是否该画装填条"判断。
         String body = methodBody(read("client/ReloadProgressHudLayer.java"),
                 "boolean hasReloadBar(");
+        assertTrue(body.contains("PENDING_TORPEDO_RELOAD.get()"),
+                "鱼雷发射冷却没有 pending 装填时不得显示装填条");
+        assertTrue(body.contains("pending == null || !pending.isValid()"),
+                "只有有效的手动装填 pending 才能显示鱼雷装填条");
         assertTrue(body.contains("hasTorpedoReloadEquipped(player, core)"),
                 "没有再装填部件时不画鱼雷读条");
     }

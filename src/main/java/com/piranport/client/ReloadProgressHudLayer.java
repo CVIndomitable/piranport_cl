@@ -3,6 +3,7 @@ package com.piranport.client;
 import com.piranport.PiranPort;
 import com.piranport.artillery.ArtilleryItem;
 import com.piranport.combat.TransformationManager;
+import com.piranport.component.PendingTorpedoReload;
 import com.piranport.component.WeaponCooldown;
 import com.piranport.item.AircraftItem;
 import com.piranport.item.DepthChargeLauncherItem;
@@ -107,6 +108,10 @@ public class ReloadProgressHudLayer {
         WeaponCooldown cooldown = stack.get(ModDataComponents.WEAPON_COOLDOWN.get());
         if (cooldown == null) return false;
         if (stack.getItem() instanceof TorpedoLauncherItem) {
+            // 鱼雷发射后的 WEAPON_COOLDOWN 只是发射冷却，不代表自动装填。
+            // 只有 R 键创建的待结算状态存在时，才允许把这段计时显示为装填条。
+            PendingTorpedoReload pending = stack.get(ModDataComponents.PENDING_TORPEDO_RELOAD.get());
+            if (pending == null || !pending.isValid()) return false;
             ItemStack core = TransformationManager.findTransformedCore(player);
             if (core.isEmpty() || !TransformationManager.hasTorpedoReloadEquipped(player, core)) return false;
         }

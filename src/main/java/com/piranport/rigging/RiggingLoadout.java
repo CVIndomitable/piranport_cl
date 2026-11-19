@@ -21,7 +21,8 @@ public record RiggingLoadout(
         List<RiggingMount> mounts,
         boolean hasAircraft,
         int hullProfile,
-        int selectedSlot) {
+        int selectedSlot,
+        boolean hasReturningAircraft) {
 
     // hullProfile 的取值：服务端按皮肤 ID 判定，客户端只负责转成枚举。
     // 与旧 ShipRiggingLayer.resolveHullProfile 的映射保持一致。
@@ -38,7 +39,7 @@ public record RiggingLoadout(
      * 客户端据此区分「服务端说没变身」与「已变身但快捷栏里没武器」。
      */
     public static final RiggingLoadout EMPTY =
-            new RiggingLoadout(List.of(), false, HULL_DEFAULT, -1);
+            new RiggingLoadout(List.of(), false, HULL_DEFAULT, -1, false);
 
     public RiggingLoadout {
         mounts = List.copyOf(mounts);
@@ -47,6 +48,11 @@ public record RiggingLoadout(
     /** 是否为「没有挂点快照」，而不是「有快照但没装武器」。 */
     public boolean isEmpty() {
         return selectedSlot < 0;
+    }
+
+    /** 返航状态覆盖错峰抵达的空档，本地降落动画覆盖末架实体回收之后的滑行和复位。 */
+    public boolean hidesParkedAircraft(boolean landingAnimationActive) {
+        return hasReturningAircraft || landingAnimationActive;
     }
 
     /**
@@ -69,6 +75,7 @@ public record RiggingLoadout(
             hash = hash * 31 + BuiltInRegistries.ITEM.getId(mount.stack().getItem());
         }
         hash = hash * 31 + (hasAircraft ? 1 : 0);
+        hash = hash * 31 + (hasReturningAircraft ? 1 : 0);
         hash = hash * 31 + hullProfile;
         hash = hash * 31 + selectedSlot;
         return hash;
@@ -96,7 +103,7 @@ public record RiggingLoadout(
                     boolean hasAircraft = buf.readBoolean();
                     int hullProfile = buf.readVarInt();
                     int selectedSlot = buf.readVarInt() - 1;
-                    return new RiggingLoadout(mounts, hasAircraft, hullProfile, selectedSlot);
+                    return new RiggingLoadout(mounts, hasAircraft, hullProfile, selectedSlot, buf.readBoolean());
                 }
 
                 @Override
@@ -112,6 +119,7 @@ public record RiggingLoadout(
                     buf.writeVarInt(loadout.hullProfile());
                     // selectedSlot 可能是 -1（哨兵），varint 不写负数，统一 +1 编码。
                     buf.writeVarInt(loadout.selectedSlot() + 1);
+                    buf.writeBoolean(loadout.hasReturningAircraft());
                 }
             };
 }

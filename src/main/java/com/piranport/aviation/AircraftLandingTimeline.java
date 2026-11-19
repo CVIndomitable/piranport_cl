@@ -1,6 +1,6 @@
 package com.piranport.aviation;
 
-/** 返航近身后的视觉时间轴：进场缩小、着舰滑行、恢复停放姿态。 */
+/** 返航近身后的视觉时间轴：进场缩小、着舰滑行、空甲板复位。 */
 public record AircraftLandingTimeline(int approachTicks, int rollTicks, int settleTicks) {
     public AircraftLandingTimeline {
         if (approachTicks < 1 || rollTicks < 1 || settleTicks < 1) {
@@ -10,6 +10,12 @@ public record AircraftLandingTimeline(int approachTicks, int rollTicks, int sett
 
     public int rollEndTick() { return approachTicks + rollTicks; }
     public int durationTicks() { return rollEndTick() + settleTicks; }
+
+    /** 滑行完即隐藏该飞机，甲板复位阶段不再显示停放副本。 */
+    public boolean showsAircraft(float age) { return age >= 0 && age < rollEndTick(); }
+
+    /** 等复位完成才恢复停放展示；已收到但尚未到起始 tick 的动画也先清空甲板。 */
+    public boolean holdsDeck(float age) { return age < durationTicks(); }
 
     private static float progress(float age, float start, int ticks) {
         float t = Math.clamp((age - start) / ticks, 0.0f, 1.0f);

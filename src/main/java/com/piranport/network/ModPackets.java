@@ -8,7 +8,7 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 @EventBusSubscriber(modid = PiranPort.MOD_ID)
 public class ModPackets {
-    public static final String PROTOCOL_VERSION = "2";
+    public static final String PROTOCOL_VERSION = "3";
 
     @SubscribeEvent
     public static void register(RegisterPayloadHandlersEvent event) {

@@ -39,6 +39,20 @@ class AircraftLandingTimelineTest {
     }
 
     @Test
+    void landedAircraftDisappearsImmediatelyButDeckStaysClearDuringSettle() {
+        var timeline = new AircraftLandingTimeline(16, 8, 6);
+        assertFalse(timeline.showsAircraft(-0.25f));
+        assertTrue(timeline.showsAircraft(0));
+        assertTrue(timeline.showsAircraft(23.75f));
+        assertFalse(timeline.showsAircraft(24));
+        assertFalse(timeline.showsAircraft(29.75f));
+        assertTrue(timeline.holdsDeck(-0.25f));
+        assertTrue(timeline.holdsDeck(24));
+        assertTrue(timeline.holdsDeck(29.75f));
+        assertFalse(timeline.holdsDeck(30));
+    }
+
+    @Test
     void rejectsEmptyStages() {
         assertThrows(IllegalArgumentException.class, () -> new AircraftLandingTimeline(0, 8, 6));
         assertThrows(IllegalArgumentException.class, () -> new AircraftLandingTimeline(16, 0, 6));

@@ -1,5 +1,6 @@
 package com.piranport.rigging;
 
+import com.piranport.aviation.AircraftLandingTimeline;
 import com.piranport.item.AircraftItem;
 import io.netty.buffer.Unpooled;
 import net.minecraft.SharedConstants;
@@ -23,6 +24,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -120,6 +122,31 @@ class RiggingLoadoutCodecTest {
         assertEquals(RiggingSocket.DECK_2, socketForSlot(loadout, 2));
     }
 
+    @Test
+    void staggeredLandingsOnlyRestoreParkedAircraftAfterLastLanding() {
+        Inventory inventory = new Inventory(null);
+        inventory.items.set(2, new ItemStack(testAircraftA));
+        var timeline = new AircraftLandingTimeline(16, 8, 6);
+        var firstReturned = RiggingLoadoutResolver.assign(inventory, 0, true, true);
+
+        assertTrue(firstReturned.hasAircraft());
+        assertEquals(RiggingSocket.DECK_1, socketForSlot(firstReturned, 2));
+        assertTrue(firstReturned.hidesParkedAircraft(timeline.holdsDeck(40)),
+                "先到飞机的动画已经结束，但下一架仍在返航，甲板不能恢复显示");
+
+        inventory.items.set(5, new ItemStack(testAircraftB));
+        var lastReturned = RiggingLoadoutResolver.assign(inventory, 0, false, false);
+        assertEquals(2, lastReturned.mounts().size());
+        assertTrue(lastReturned.hidesParkedAircraft(timeline.holdsDeck(20)),
+                "末架实体已回收，但仍在播放着舰滑行");
+        assertTrue(lastReturned.hidesParkedAircraft(timeline.holdsDeck(24)),
+                "滑行结束立即隐藏飞机，甲板保持空置直到复位结束");
+        assertFalse(lastReturned.hidesParkedAircraft(timeline.holdsDeck(30)));
+        assertNotEquals(lastReturned.fingerprint(),
+                RiggingLoadoutResolver.assign(inventory, 0, true, true).fingerprint(),
+                "即使挂点不变，返航标志改变也必须同步");
+    }
+
     private static RiggingSocket socketForSlot(RiggingLoadout loadout, int sourceSlot) {
         return loadout.mounts().stream()
                 .filter(mount -> mount.sourceSlot() == sourceSlot)
@@ -140,7 +167,8 @@ class RiggingLoadoutCodecTest {
                                 new ItemStack(Items.ELYTRA), 7)),
                 true,
                 RiggingLoadout.HULL_CARRIER,
-                3);
+                3,
+                true);
 
         RegistryFriendlyByteBuf buf = newBuffer();
         RiggingLoadout.STREAM_CODEC.encode(buf, original);
@@ -162,6 +190,7 @@ class RiggingLoadoutCodecTest {
         assertEquals(0, decoded.mounts().size());
         assertEquals(0, decoded.hullProfile());
         assertFalse(decoded.hasAircraft());
+        assertFalse(decoded.hasReturningAircraft());
         assertEquals(0, buf.readableBytes());
     }
 
@@ -176,6 +205,7 @@ class RiggingLoadoutCodecTest {
 
     private static void assertLoadoutMatches(RiggingLoadout expected, RiggingLoadout actual) {
         assertEquals(expected.hasAircraft(), actual.hasAircraft());
+        assertEquals(expected.hasReturningAircraft(), actual.hasReturningAircraft());
         assertEquals(expected.hullProfile(), actual.hullProfile());
         assertEquals(expected.selectedSlot(), actual.selectedSlot());
         assertEquals(expected.mounts().size(), actual.mounts().size());

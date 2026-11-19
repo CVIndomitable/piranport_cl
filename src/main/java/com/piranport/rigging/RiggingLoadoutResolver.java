@@ -1,6 +1,8 @@
 package com.piranport.rigging;
 
+import com.piranport.aviation.AircraftIndex;
 import com.piranport.combat.TransformationManager;
+import com.piranport.entity.AircraftEntity;
 import com.piranport.skin.SkinManager;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -51,10 +53,19 @@ public final class RiggingLoadoutResolver {
         if (TransformationManager.findTransformedCore(player).isEmpty()) {
             return RiggingLoadout.EMPTY;
         }
-        boolean airborne = !player.level().isClientSide() && com.piranport.aviation.AircraftIndex
-                .snapshot(player.getUUID()).stream()
-                .anyMatch(craft -> !craft.isRemoved() && craft.isAlive() && craft.level() == player.level());
-        return assign(player.getInventory(), skinId, airborne);
+        boolean airborne = false;
+        boolean returning = false;
+        if (!player.level().isClientSide()) {
+            for (AircraftEntity craft : AircraftIndex.snapshot(player.getUUID())) {
+                if (craft.isRemoved() || !craft.isAlive() || craft.level() != player.level()) continue;
+                airborne = true;
+                if (craft.getFlightState() == AircraftEntity.FlightState.RETURNING) {
+                    returning = true;
+                    break;
+                }
+            }
+        }
+        return assign(player.getInventory(), skinId, airborne, returning);
     }
 
     /**
@@ -76,6 +87,10 @@ public final class RiggingLoadoutResolver {
     }
 
     public static RiggingLoadout assign(Inventory inventory, int skinId, boolean airborne) {
+        return assign(inventory, skinId, airborne, false);
+    }
+
+    static RiggingLoadout assign(Inventory inventory, int skinId, boolean airborne, boolean returning) {
         int selectedSlot = inventory.selected;
 
         List<Candidate> candidates = new ArrayList<>();
@@ -124,7 +139,7 @@ public final class RiggingLoadoutResolver {
         }
 
         int hullProfile = hullProfileForSkin(skinId, hasAircraft);
-        return new RiggingLoadout(mounts, hasAircraft, hullProfile, selectedSlot);
+        return new RiggingLoadout(mounts, hasAircraft, hullProfile, selectedSlot, returning);
     }
 
     /**

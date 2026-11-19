@@ -2,11 +2,9 @@ package com.piranport.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
-import com.piranport.aviation.AircraftDefinitionService;
 import com.piranport.aviation.AircraftLandingTimeline;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.network.AircraftLandingVisualPayload;
-import com.piranport.rigging.RiggingMount;
 import com.piranport.rigging.RiggingSocket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -35,16 +33,11 @@ public final class AircraftLandingVisualClientState {
         }
         if (now == null) return;
         LANDINGS.values().removeIf(l -> {
-            if (now.getGameTime() - l.packet.startTick() >= l.timeline.durationTicks()) return true;
+            if (!l.timeline.holdsDeck(age(l, 0))) return true;
             var launcher = now.getEntity(l.packet.launcherId());
             if (!(launcher instanceof AbstractClientPlayer player)) return false;
-            if (!player.getUUID().equals(l.packet.launcherUuid()) || !player.isAlive()
-                    || !RiggingClientState.isRenderedAsTransformed(player)) return true;
-            var loadout = RiggingClientState.resolveLoadout(player);
-            boolean present = loadout.mounts().stream().anyMatch(m -> matchesMount(l, m));
-            if (loadout.fingerprint() == l.packet.snapshotFingerprint() || present) l.snapshotSeen = true;
-            // 回收快照尚未到达时允许等待；到达后若飞机被移出或再次放飞，不能继续画停放副本。
-            return l.snapshotSeen && !present;
+            return !player.getUUID().equals(l.packet.launcherUuid()) || !player.isAlive()
+                    || !RiggingClientState.isRenderedAsTransformed(player);
         });
     }
 
@@ -104,18 +97,6 @@ public final class AircraftLandingVisualClientState {
         return weight;
     }
 
-    public static boolean shouldHideMount(int playerId, RiggingMount mount) {
-        cleanup();
-        if (level == null) return false;
-        return LANDINGS.values().stream().anyMatch(l -> matches(l, playerId) && matchesMount(l, mount));
-    }
-
-    private static boolean matchesMount(Landing landing, RiggingMount mount) {
-        if (mount.sourceSlot() != landing.packet.targetSlot()) return false;
-        var definition = AircraftDefinitionService.resolve(mount.stack());
-        return definition != null && definition.visualId().equals(landing.packet.visualId());
-    }
-
     public static boolean hidesEntity(AircraftEntity entity) {
         cleanup();
         Landing landing = LANDINGS.get(entity.getUUID());
@@ -134,17 +115,9 @@ public final class AircraftLandingVisualClientState {
         for (Landing landing : LANDINGS.values()) {
             if (!matches(landing, playerId)) continue;
             float age = age(landing, partial);
-            if (age < 0 || age >= landing.timeline.durationTicks()) continue;
-            // 回收快照可能重排了其它飞机，目标机位跟随该来源槽位，而不按物品 ID 猜测。
+            if (!landing.timeline.showsAircraft(age)) continue;
+            // 后续回收可能把原槽挤出展示位；滑行终点冻结，不随停放快照跳位或提前消失。
             RiggingSocket socket = RiggingSocket.byId(landing.packet.socketId());
-            var player = (AbstractClientPlayer) level.getEntity(playerId);
-            for (RiggingMount mount : RiggingClientState.resolveLoadout(player).mounts()) {
-                if (mount.sourceSlot() == landing.packet.targetSlot()
-                        && (mount.socket() == RiggingSocket.DECK_1 || mount.socket() == RiggingSocket.DECK_2)) {
-                    socket = mount.socket();
-                    break;
-                }
-            }
             float parkZ = RiggingDeckPose.aircraftZ(socket, firstPerson) / 16;
             float touchZ = (firstPerson ? -RiggingDeckPose.EDGE_Z : RiggingDeckPose.EDGE_Z) / 16;
             poses.pushPose();
@@ -181,8 +154,6 @@ public final class AircraftLandingVisualClientState {
         final Vec3 source;
         final float yaw;
         final float pitch;
-        boolean snapshotSeen;
-
         Landing(AircraftLandingVisualPayload packet, Vec3 source, float yaw, float pitch) {
             this.packet = packet;
             this.timeline = new AircraftLandingTimeline(packet.approachTicks(), packet.rollTicks(), packet.settleTicks());

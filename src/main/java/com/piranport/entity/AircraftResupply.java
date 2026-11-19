@@ -97,7 +97,7 @@ public class AircraftResupply {
                 new com.piranport.network.AircraftLandingVisualPayload(owner.getId(), owner.getUUID(),
                         craft.getId(), craft.getUUID(), slot, mount.get().socket().ordinal(), craft.getVisualId(),
                         craft.getX(), craft.getY(), craft.getZ(), craft.getYRot(), craft.getXRot(),
-                        loadout.fingerprint(), level.getGameTime(),
+                        level.getGameTime(),
                         com.piranport.config.ModEquipmentConfig.AIRCRAFT_LANDING_APPROACH_TICKS.get(),
                         com.piranport.config.ModEquipmentConfig.AIRCRAFT_LANDING_ROLL_TICKS.get(),
                         com.piranport.config.ModEquipmentConfig.AIRCRAFT_LANDING_SETTLE_TICKS.get()));

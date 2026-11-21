@@ -42,6 +42,9 @@ import java.util.UUID;
 
 public class TorpedoEntity extends ThrowableItemProjectile {
 
+    /** 磁性近炸和主动命中扫描的启用延迟：发射后 5 秒（100 tick）。 */
+    private static final int PROXIMITY_SCAN_ARM_TICKS = 100;
+
     // ===== 同步字段（方案2）：客户端要跑同一套运动 AI，必须知道航速与模式标志 =====
     // 这些标志原本是服务端私有字段，客户端实体走默认构造器（速度 1.0、标志全 false），
     // 声导/氧气/空投等改航速时两边速度不一致，客户端每 tick 被服务端硬校正 → 抖动主因。
@@ -127,7 +130,10 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
     // 磁性近炸（读终端 global.torpedo.magnetic_*）
     private static double magneticDetonateDist() { return ModEquipmentConfig.TORPEDO_MAGNETIC_DETONATE_DIST.get(); }
-    private static int magneticArmTicks() { return ModEquipmentConfig.TORPEDO_MAGNETIC_ARM_TICKS.get(); }
+    /** 扫描启用延迟：默认至少 5 秒，保留终端参数作为可调的更长延迟。 */
+    private static int proximityScanArmTicks() {
+        return Math.max(PROXIMITY_SCAN_ARM_TICKS, ModEquipmentConfig.TORPEDO_MAGNETIC_ARM_TICKS.get());
+    }
 
     public TorpedoEntity(EntityType<? extends TorpedoEntity> type, Level level) {
         super(type, level);
@@ -528,14 +534,15 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
     /** 磁性近炸检测 */
     private boolean tickMagneticProximity() {
-        if (level().isClientSide() || !magnetic || tickCount <= magneticArmTicks()) return false;
+        if (level().isClientSide() || !magnetic || tickCount <= proximityScanArmTicks()) return false;
         checkMagneticProximity();
         return exploded;
     }
 
     /** 水面巡航阶段主动近炸检测（扁平 hitbox 易滑过目标） */
     private boolean tickProximityHit() {
-        if (level().isClientSide() || exploded || airDrop || tickCount <= 2 || isRemoved()) return false;
+        if (level().isClientSide() || exploded || airDrop
+                || tickCount <= proximityScanArmTicks() || isRemoved()) return false;
         Entity nearby = findProximityHitTarget();
         if (nearby != null) {
             onHitEntity(new EntityHitResult(nearby));
@@ -734,10 +741,10 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         Entity best = null;
         double bestDistSq = Double.MAX_VALUE;
         for (Entity e : level().getEntities(this, scanBox, e -> {
-            if (e == getOwner()) return false;
             if (!e.isAlive() || !e.isPickable()) return false;
-            if (com.piranport.combat.FriendlyFireHelper.shouldBlockHit(e, getOwner())) return false;
-            return true;
+            // 发射者可以被主动命中扫描命中；其他内部友伤规则仍由统一辅助类处理。
+            return e == getOwner()
+                    || !com.piranport.combat.FriendlyFireHelper.shouldBlockHit(e, getOwner());
         })) {
             double d = distanceToSqr(e);
             if (d < bestDistSq) {
@@ -752,9 +759,10 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         double detonateDist = magneticDetonateDist();
         AABB searchBox = getBoundingBox().inflate(detonateDist);
         java.util.List<Entity> nearby = level().getEntities(this, searchBox, e -> {
-            if (e == getOwner()) return false;
-            if (com.piranport.combat.FriendlyFireHelper.shouldBlockHit(e, getOwner())) return false;
-            return e.isAlive() && e.isPickable();
+            if (!e.isAlive() || !e.isPickable()) return false;
+            // 发射者可以触发磁性近炸；其他内部友伤规则仍由统一辅助类处理。
+            return e == getOwner()
+                    || !com.piranport.combat.FriendlyFireHelper.shouldBlockHit(e, getOwner());
         });
 
         for (Entity entity : nearby) {
@@ -898,7 +906,10 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
     @Override
     protected boolean canHitEntity(Entity target) {
-        if (com.piranport.combat.FriendlyFireHelper.shouldBlockHit(target, getOwner())) return false;
+        // 普通投射物碰撞允许伤害发射者。扫描器也在解锁后允许发射者作为目标；这里只保留
+        // 对其他目标的内部防呆规则（深海互伤、女仆/飞机归属保护等）。
+        if (target != getOwner()
+                && com.piranport.combat.FriendlyFireHelper.shouldBlockHit(target, getOwner())) return false;
         return super.canHitEntity(target);
     }
 

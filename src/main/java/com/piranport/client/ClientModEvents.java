@@ -5,6 +5,7 @@ import com.piranport.client.AircraftRenderer;
 import com.piranport.client.CuttingBoardRenderer;
 import com.piranport.client.PlaceableFoodRenderer;
 import com.piranport.client.WeaponReloadDecorator;
+import com.piranport.client.gecko.RiggingRenderContext;
 import com.piranport.menu.AmmoWorkbenchScreen;
 import com.piranport.menu.CookingPotScreen;
 import com.piranport.menu.ReloadFacilityScreen;
@@ -328,6 +329,10 @@ public class ClientModEvents {
                 new CompassItemPropertyFunction(compassTarget)));
 
         event.enqueueWork(() -> {
+            // 展示框和舰装挂点都用 FIXED；只有舰装渲染期间才覆盖手持/图标模型。
+            ItemProperties.register(WeaponItems.MEDIUM_GUN.get(),
+                    ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "rigging_mount"),
+                    (stack, level, entity, seed) -> RiggingRenderContext.isRiggingPass() ? 1.0f : 0.0f);
             // 为所有 AircraftItem 实例注册 "fueled" 属性（包括命名变体）
             for (var entry : ModItems.ITEMS.getEntries()) {
                 if (entry.get() instanceof com.piranport.item.TaihouUmbrellaItem

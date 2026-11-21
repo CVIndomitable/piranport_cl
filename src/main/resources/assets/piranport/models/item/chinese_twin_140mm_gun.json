@@ -30,6 +30,12 @@
         "piranport:loaded": 1
       },
       "model": "piranport:item/chinese_twin_140mm_gun_loaded"
+    },
+    {
+      "predicate": {
+        "piranport:rigging_mount": 1
+      },
+      "model": "piranport:item/chinese_twin_140mm_gun_mounted"
     }
   ]
 }

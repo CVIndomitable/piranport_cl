@@ -1,0 +1,13 @@
+{
+  "loader": "neoforge:obj",
+  "model": "piranport:models/item/us_twin_20inch_gun_held.obj",
+  "automatic_culling": false,
+  "emissive_ambient": false,
+  "flip_v": false,
+  "gui_light": "front",
+  "textures": {
+    "particle": "piranport:item/us_twin_20inch_gun_turret",
+    "armor": "piranport:item/us_twin_20inch_gun_turret",
+    "muzzle": "piranport:item/us_twin_20inch_gun_turret"
+  }
+}

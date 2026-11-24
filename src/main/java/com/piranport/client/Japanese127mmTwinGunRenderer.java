@@ -7,6 +7,7 @@ import com.piranport.client.gecko.RiggingRenderContext;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
+import com.piranport.rigging.RiggingGeometry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -24,42 +25,35 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import org.joml.Vector3f;
 
-import java.util.EnumSet;
-import java.util.Set;
-
 /**
  * 日本12.7厘米连装炮的自定义物品渲染。
  *
- * <p>渲染分两种上下文：
- * <ul>
- *   <li>舰装挂点（FIXED + rigging pass）：渲染 models/item/japanese_127mm_twin_gun_3d.json 的 3D 炮塔；</li>
- *   <li>GUI/掉落物/展示框等：直接画 32x32 物品图标，保持普通物品的外观。</li>
- * </ul>
+ * <p>双手渲染带握把的模型，舰装挂点使用带回转座的模型，其他场合保留 32x32 原图标。
  *
- * <p>WHY：物品模型无法按显示上下文切换模型，只有 BEWLR 能同时做到
- * 「物品栏/手持/展示框是图标、舰装挂点是立体炮塔」。图标不依赖模型 JSON，直接绑定原贴图，
- * 装填/空膛两态在这里按 LOADED_AMMO 组件选择。
+ * <p>展示框与舰装都用 FIXED，需要舰装渲染作用域才能区分。两套模型和图标均保留装填/空膛两态。
  */
 public class Japanese127mmTwinGunRenderer extends BlockEntityWithoutLevelRenderer {
 
     private static Japanese127mmTwinGunRenderer INSTANCE;
-
-    /** 诊断用：每个显示上下文只打一次日志，确认 BEWLR 是否被调用。 */
-    private static final Set<ItemDisplayContext> LOGGED_CONTEXTS =
-            EnumSet.noneOf(ItemDisplayContext.class);
 
     private static final ResourceLocation ICON_LOADED = ResourceLocation.fromNamespaceAndPath(
             PiranPort.MOD_ID, "textures/item/japanese_127mm_twin_gun.png");
     private static final ResourceLocation ICON_EMPTY = ResourceLocation.fromNamespaceAndPath(
             PiranPort.MOD_ID, "textures/item/japanese_127mm_twin_gun_empty.png");
 
-    /** 两份 standalone 3D 模型，在 ModelEvent.RegisterAdditional 里注册烘焙。 */
+    /** 由 ModelEvent.RegisterAdditional 注册烘焙。 */
     public static final ModelResourceLocation MODEL_EMPTY = ModelResourceLocation.standalone(
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID,
-                    "item/japanese_127mm_twin_gun_3d"));
+                    "item/japanese_127mm_twin_gun_mounted"));
     public static final ModelResourceLocation MODEL_LOADED = ModelResourceLocation.standalone(
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID,
-                    "item/japanese_127mm_twin_gun_3d_loaded"));
+                    "item/japanese_127mm_twin_gun_mounted_loaded"));
+    public static final ModelResourceLocation HELD_EMPTY = ModelResourceLocation.standalone(
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID,
+                    "item/japanese_127mm_twin_gun_held"));
+    public static final ModelResourceLocation HELD_LOADED = ModelResourceLocation.standalone(
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID,
+                    "item/japanese_127mm_twin_gun_held_loaded"));
 
     public static final IClientItemExtensions CLIENT_EXTENSIONS = new IClientItemExtensions() {
         @Override
@@ -96,17 +90,22 @@ public class Japanese127mmTwinGunRenderer extends BlockEntityWithoutLevelRendere
                              int packedLight, int packedOverlay) {
         if (!stack.is(ModItems.JAPANESE_127MM_TWIN_GUN.get())) return;
 
-        if (LOGGED_CONTEXTS.add(displayContext)) {
-            PiranPort.LOGGER.info("Japanese127mmTwinGunRenderer context={} pose={}",
-                    displayContext, poseStack.last().pose());
-        }
-
+        boolean loaded = isLoaded(stack);
         if (displayContext == ItemDisplayContext.FIXED && RiggingRenderContext.isRiggingPass()) {
-            renderGun3D(stack, poseStack, bufferSource, packedLight, packedOverlay);
-        } else {
-            renderFlatIcon(displayContext, isLoaded(stack), poseStack, bufferSource,
-                    packedLight, packedOverlay);
+            if (renderGun3D(loaded ? MODEL_LOADED : MODEL_EMPTY, poseStack,
+                    bufferSource, packedLight, packedOverlay)) return;
+        } else if (isHandContext(displayContext)) {
+            if (renderGun3D(loaded ? HELD_LOADED : HELD_EMPTY, poseStack,
+                    bufferSource, packedLight, packedOverlay)) return;
         }
+        renderFlatIcon(displayContext, loaded, poseStack, bufferSource, packedLight, packedOverlay);
+    }
+
+    private static boolean isHandContext(ItemDisplayContext context) {
+        return context == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND
+                || context == ItemDisplayContext.FIRST_PERSON_LEFT_HAND
+                || context == ItemDisplayContext.THIRD_PERSON_RIGHT_HAND
+                || context == ItemDisplayContext.THIRD_PERSON_LEFT_HAND;
     }
 
     private static boolean isLoaded(ItemStack stack) {
@@ -118,15 +117,16 @@ public class Japanese127mmTwinGunRenderer extends BlockEntityWithoutLevelRendere
      * 渲染 3D 炮塔。模型是 standalone 注册的，按 LOADED_AMMO 选空膛/装填版本。
      * 坐标空间：物品渲染管线已在 pose 中做过 translate(-0.5)，模型坐标即 0..1。
      */
-    private static void renderGun3D(ItemStack stack, PoseStack poseStack,
-                                    MultiBufferSource bufferSource,
-                                    int packedLight, int packedOverlay) {
+    private static boolean renderGun3D(ModelResourceLocation resource, PoseStack poseStack,
+                                       MultiBufferSource bufferSource,
+                                       int packedLight, int packedOverlay) {
         Minecraft mc = Minecraft.getInstance();
-        BakedModel model = mc.getModelManager().getModel(
-                isLoaded(stack) ? MODEL_LOADED : MODEL_EMPTY);
-        if (model == null || model == mc.getModelManager().getMissingModel()) return;
+        BakedModel model = mc.getModelManager().getModel(resource);
+        if (model == null || model == mc.getModelManager().getMissingModel()) return false;
 
         VertexConsumer consumer = bufferSource.getBuffer(Sheets.translucentItemSheet());
+        poseStack.pushPose();
+        CatalogGunRenderer.scaleModel(poseStack, RiggingGeometry.COMPACT_TWIN_GUN_MODEL_SCALE);
         PoseStack.Pose pose = poseStack.last();
         RandomSource random = RandomSource.create(42L);
 
@@ -142,6 +142,8 @@ public class Japanese127mmTwinGunRenderer extends BlockEntityWithoutLevelRendere
             consumer.putBulkData(pose, quad, 1.0F, 1.0F, 1.0F, 1.0F,
                     packedLight, packedOverlay);
         }
+        poseStack.popPose();
+        return true;
     }
 
     /**

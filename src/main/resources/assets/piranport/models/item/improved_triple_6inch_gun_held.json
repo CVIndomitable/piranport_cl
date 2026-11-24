@@ -1,0 +1,333 @@
+{
+  "gui_light": "front",
+  "textures": {"particle": "piranport:item/improved_triple_6inch_gun_turret", "steel": "piranport:item/improved_triple_6inch_gun_turret", "muzzle": "piranport:item/improved_triple_6inch_gun_turret"},
+  "elements": [
+    {
+      "name": "Grip bracket",
+      "from": [4.6, 7.05, 3.7],
+      "to": [11.4, 9.55, 10.5],
+      "faces": {
+        "north": {"uv": [2.5, 11.75, 5.5, 13.5], "texture": "#steel"},
+        "south": {"uv": [2.5, 11.75, 5.5, 13.5], "texture": "#steel"},
+        "west": {"uv": [2.5, 11.75, 5.5, 13.5], "texture": "#steel"},
+        "east": {"uv": [2.5, 11.75, 5.5, 13.5], "texture": "#steel"},
+        "down": {"uv": [2.5, 11.75, 5.5, 13.5], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Hand grip",
+      "from": [5.8, 2.71, 4.9],
+      "to": [10.2, 7.05, 9.1],
+      "faces": {
+        "north": {"uv": [2.5, 11.75, 5.5, 13.5], "texture": "#steel"},
+        "south": {"uv": [2.5, 11.75, 5.5, 13.5], "texture": "#steel"},
+        "west": {"uv": [0.0, 14.0, 3.25, 15.75], "texture": "#steel"},
+        "east": {"uv": [0.0, 14.0, 3.25, 15.75], "texture": "#steel"},
+        "down": {"uv": [2.5, 9.5, 4.5, 11.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turret armor middle",
+      "from": [0, 9.55, 0.0],
+      "to": [16, 18.65, 12.75],
+      "faces": {
+        "up": {"uv": [0.0, 9.5, 2.0, 11.25], "texture": "#steel"},
+        "down": {"uv": [2.5, 9.5, 4.5, 11.25], "texture": "#steel"},
+        "west": {"uv": [0.0, 0.0, 5.75, 4.25], "texture": "#steel"},
+        "east": {"uv": [0.0, 4.75, 5.75, 9.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turret armor rear",
+      "from": [1.25, 9.55, -1.25],
+      "to": [14.75, 18.65, 0.0],
+      "faces": {
+        "up": {"uv": [0.0, 9.5, 2.0, 11.25], "texture": "#steel"},
+        "down": {"uv": [2.5, 9.5, 4.5, 11.25], "texture": "#steel"},
+        "north": {"uv": [11.5, 5.0, 15.75, 9.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turret armor front",
+      "from": [2.35, 9.55, 12.75],
+      "to": [13.65, 18.65, 15.1],
+      "faces": {
+        "up": {"uv": [0.0, 9.5, 2.0, 11.25], "texture": "#steel"},
+        "down": {"uv": [2.5, 9.5, 4.5, 11.25], "texture": "#steel"},
+        "south": {"uv": [6.0, 0.0, 13.75, 4.5], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turret armor port rear",
+      "from": [0, 9.55, 0.0],
+      "to": [1.76776695, 18.65, 0.88388348],
+      "rotation": {"origin": [0, 9.55, 0.0], "axis": "y", "angle": 45},
+      "faces": {
+        "up": {"uv": [0.0, 9.5, 2.0, 11.25], "texture": "#steel"},
+        "down": {"uv": [2.5, 9.5, 4.5, 11.25], "texture": "#steel"},
+        "north": {"uv": [9.0, 5.0, 11.0, 9.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turret armor starboard rear",
+      "from": [14.75, 9.55, -1.25],
+      "to": [16.51776695, 18.65, -0.36611652],
+      "rotation": {"origin": [14.75, 9.55, -1.25], "axis": "y", "angle": -45},
+      "faces": {
+        "up": {"uv": [0.0, 9.5, 2.0, 11.25], "texture": "#steel"},
+        "down": {"uv": [2.5, 9.5, 4.5, 11.25], "texture": "#steel"},
+        "north": {"uv": [9.0, 5.0, 11.0, 9.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turret armor port front",
+      "from": [0, 9.55, 11.08829906],
+      "to": [3.32340187, 18.65, 12.75],
+      "rotation": {"origin": [0, 9.55, 12.75], "axis": "y", "angle": -45},
+      "faces": {
+        "up": {"uv": [0.0, 9.5, 2.0, 11.25], "texture": "#steel"},
+        "down": {"uv": [2.5, 9.5, 4.5, 11.25], "texture": "#steel"},
+        "south": {"uv": [6.0, 5.0, 8.5, 9.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turret armor starboard front",
+      "from": [13.65, 9.55, 13.43829906],
+      "to": [16.97340187, 18.65, 15.1],
+      "rotation": {"origin": [13.65, 9.55, 15.1], "axis": "y", "angle": 45},
+      "faces": {
+        "up": {"uv": [0.0, 9.5, 2.0, 11.25], "texture": "#steel"},
+        "down": {"uv": [2.5, 9.5, 4.5, 11.25], "texture": "#steel"},
+        "south": {"uv": [6.0, 5.0, 8.5, 9.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Port cheek fitting",
+      "from": [0.75, 12.34, 14.04],
+      "to": [1.79, 13.33, 14.56],
+      "rotation": {"origin": [1.27, 12.34, 14.3], "axis": "y", "angle": -45},
+      "faces": {
+        "north": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "south": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "west": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "east": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "up": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "down": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Starboard cheek fitting",
+      "from": [14.21, 12.34, 14.04],
+      "to": [15.25, 13.33, 14.56],
+      "rotation": {"origin": [14.73, 12.34, 14.3], "axis": "y", "angle": 45},
+      "faces": {
+        "north": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "south": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "west": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "east": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "up": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "down": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Port roof rail",
+      "from": [1.42, 18.65, 0.3],
+      "to": [1.64, 18.91, 3.92],
+      "faces": {
+        "north": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "south": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "west": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "east": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "up": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Starboard roof rail",
+      "from": [14.36, 18.65, 0.3],
+      "to": [14.58, 18.91, 3.92],
+      "faces": {
+        "north": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "south": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "west": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "east": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "up": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Port roof edge hinge",
+      "from": [0.02, 18.4, 10.4],
+      "to": [0.32, 18.8, 11.65],
+      "faces": {
+        "north": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "south": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "west": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "east": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "up": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "down": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Starboard roof edge hinge",
+      "from": [15.68, 18.4, 10.4],
+      "to": [15.98, 18.8, 11.65],
+      "faces": {
+        "north": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "south": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "west": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "east": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "up": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"},
+        "down": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Port blast bag skirt",
+      "from": [3.37, 13.1, 13.55],
+      "to": [6.13, 18.05, 16.7],
+      "rotation": {"origin": [4.75, 15.57, 15.43], "axis": "x", "angle": -22.5},
+      "faces": {
+        "south": {"uv": [6.0, 9.75, 8.5, 13.5], "texture": "#steel"},
+        "west": {"uv": [9.0, 9.75, 11.0, 11.75], "texture": "#steel"},
+        "east": {"uv": [9.0, 9.75, 11.0, 11.75], "texture": "#steel"},
+        "up": {"uv": [11.5, 9.75, 13.5, 11.0], "texture": "#steel"},
+        "down": {"uv": [11.5, 11.5, 13.5, 12.75], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Port blast bag",
+      "from": [3.64, 13.34, 15.75],
+      "to": [5.86, 17.83, 17.02],
+      "rotation": {"origin": [4.75, 15.57, 15.43], "axis": "x", "angle": -22.5},
+      "faces": {
+        "south": {"uv": [6.0, 9.75, 8.5, 13.5], "texture": "#steel"},
+        "west": {"uv": [9.0, 9.75, 11.0, 11.75], "texture": "#steel"},
+        "east": {"uv": [9.0, 9.75, 11.0, 11.75], "texture": "#steel"},
+        "up": {"uv": [11.5, 9.75, 13.5, 11.0], "texture": "#steel"},
+        "down": {"uv": [11.5, 11.5, 13.5, 12.75], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Port breech cuff",
+      "from": [4.16, 12.81, 15.02],
+      "to": [5.34, 13.99, 18.05],
+      "faces": {
+        "west": {"uv": [3.75, 14.25, 9.5, 15.5], "texture": "#steel"},
+        "east": {"uv": [3.75, 14.25, 9.5, 15.5], "texture": "#steel"},
+        "up": {"uv": [10.0, 14.25, 12.0, 15.5], "texture": "#steel"},
+        "down": {"uv": [12.5, 14.25, 13.75, 15.5], "texture": "#steel"},
+        "south": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Port barrel",
+      "from": [4.35, 13.0, 18.05],
+      "to": [5.15, 13.8, 31.25],
+      "faces": {
+        "west": {"uv": [3.75, 14.25, 9.5, 15.5], "texture": "#steel"},
+        "east": {"uv": [3.75, 14.25, 9.5, 15.5], "texture": "#steel"},
+        "up": {"uv": [10.0, 14.25, 12.0, 15.5], "texture": "#steel"},
+        "down": {"uv": [12.5, 14.25, 13.75, 15.5], "texture": "#steel"},
+        "south": {"uv": [14.5, 14.25, 15.75, 15.5], "texture": "#muzzle"}
+      }
+    },
+    {
+      "name": "Center blast bag skirt",
+      "from": [6.62, 13.1, 13.55],
+      "to": [9.38, 18.05, 16.7],
+      "rotation": {"origin": [8, 15.57, 15.43], "axis": "x", "angle": -22.5},
+      "faces": {
+        "south": {"uv": [6.0, 9.75, 8.5, 13.5], "texture": "#steel"},
+        "west": {"uv": [9.0, 9.75, 11.0, 11.75], "texture": "#steel"},
+        "east": {"uv": [9.0, 9.75, 11.0, 11.75], "texture": "#steel"},
+        "up": {"uv": [11.5, 9.75, 13.5, 11.0], "texture": "#steel"},
+        "down": {"uv": [11.5, 11.5, 13.5, 12.75], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Center blast bag",
+      "from": [6.89, 13.34, 15.75],
+      "to": [9.11, 17.83, 17.02],
+      "rotation": {"origin": [8, 15.57, 15.43], "axis": "x", "angle": -22.5},
+      "faces": {
+        "south": {"uv": [6.0, 9.75, 8.5, 13.5], "texture": "#steel"},
+        "west": {"uv": [9.0, 9.75, 11.0, 11.75], "texture": "#steel"},
+        "east": {"uv": [9.0, 9.75, 11.0, 11.75], "texture": "#steel"},
+        "up": {"uv": [11.5, 9.75, 13.5, 11.0], "texture": "#steel"},
+        "down": {"uv": [11.5, 11.5, 13.5, 12.75], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Center breech cuff",
+      "from": [7.41, 12.81, 15.02],
+      "to": [8.59, 13.99, 18.05],
+      "faces": {
+        "west": {"uv": [3.75, 14.25, 9.5, 15.5], "texture": "#steel"},
+        "east": {"uv": [3.75, 14.25, 9.5, 15.5], "texture": "#steel"},
+        "up": {"uv": [10.0, 14.25, 12.0, 15.5], "texture": "#steel"},
+        "down": {"uv": [12.5, 14.25, 13.75, 15.5], "texture": "#steel"},
+        "south": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Center barrel",
+      "from": [7.6, 13.0, 18.05],
+      "to": [8.4, 13.8, 31.25],
+      "faces": {
+        "west": {"uv": [3.75, 14.25, 9.5, 15.5], "texture": "#steel"},
+        "east": {"uv": [3.75, 14.25, 9.5, 15.5], "texture": "#steel"},
+        "up": {"uv": [10.0, 14.25, 12.0, 15.5], "texture": "#steel"},
+        "down": {"uv": [12.5, 14.25, 13.75, 15.5], "texture": "#steel"},
+        "south": {"uv": [14.5, 14.25, 15.75, 15.5], "texture": "#muzzle"}
+      }
+    },
+    {
+      "name": "Starboard blast bag skirt",
+      "from": [9.87, 13.1, 13.55],
+      "to": [12.63, 18.05, 16.7],
+      "rotation": {"origin": [11.25, 15.57, 15.43], "axis": "x", "angle": -22.5},
+      "faces": {
+        "south": {"uv": [6.0, 9.75, 8.5, 13.5], "texture": "#steel"},
+        "west": {"uv": [9.0, 9.75, 11.0, 11.75], "texture": "#steel"},
+        "east": {"uv": [9.0, 9.75, 11.0, 11.75], "texture": "#steel"},
+        "up": {"uv": [11.5, 9.75, 13.5, 11.0], "texture": "#steel"},
+        "down": {"uv": [11.5, 11.5, 13.5, 12.75], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Starboard blast bag",
+      "from": [10.14, 13.34, 15.75],
+      "to": [12.36, 17.83, 17.02],
+      "rotation": {"origin": [11.25, 15.57, 15.43], "axis": "x", "angle": -22.5},
+      "faces": {
+        "south": {"uv": [6.0, 9.75, 8.5, 13.5], "texture": "#steel"},
+        "west": {"uv": [9.0, 9.75, 11.0, 11.75], "texture": "#steel"},
+        "east": {"uv": [9.0, 9.75, 11.0, 11.75], "texture": "#steel"},
+        "up": {"uv": [11.5, 9.75, 13.5, 11.0], "texture": "#steel"},
+        "down": {"uv": [11.5, 11.5, 13.5, 12.75], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Starboard breech cuff",
+      "from": [10.66, 12.81, 15.02],
+      "to": [11.84, 13.99, 18.05],
+      "faces": {
+        "west": {"uv": [3.75, 14.25, 9.5, 15.5], "texture": "#steel"},
+        "east": {"uv": [3.75, 14.25, 9.5, 15.5], "texture": "#steel"},
+        "up": {"uv": [10.0, 14.25, 12.0, 15.5], "texture": "#steel"},
+        "down": {"uv": [12.5, 14.25, 13.75, 15.5], "texture": "#steel"},
+        "south": {"uv": [0.0, 11.75, 2.25, 13.5], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Starboard barrel",
+      "from": [10.85, 13.0, 18.05],
+      "to": [11.65, 13.8, 31.25],
+      "faces": {
+        "west": {"uv": [3.75, 14.25, 9.5, 15.5], "texture": "#steel"},
+        "east": {"uv": [3.75, 14.25, 9.5, 15.5], "texture": "#steel"},
+        "up": {"uv": [10.0, 14.25, 12.0, 15.5], "texture": "#steel"},
+        "down": {"uv": [12.5, 14.25, 13.75, 15.5], "texture": "#steel"},
+        "south": {"uv": [14.5, 14.25, 15.75, 15.5], "texture": "#muzzle"}
+      }
+    }
+  ]
+}

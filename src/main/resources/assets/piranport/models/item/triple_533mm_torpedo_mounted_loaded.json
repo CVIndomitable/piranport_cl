@@ -1,0 +1,12 @@
+{
+  "loader": "neoforge:obj",
+  "model": "piranport:models/item/triple_533mm_torpedo_mounted.obj",
+  "automatic_culling": false,
+  "emissive_ambient": false,
+  "flip_v": false,
+  "gui_light": "front",
+  "textures": {
+    "particle": "piranport:item/triple_533mm_torpedo_atlas",
+    "atlas": "piranport:item/triple_533mm_torpedo_atlas"
+  }
+}

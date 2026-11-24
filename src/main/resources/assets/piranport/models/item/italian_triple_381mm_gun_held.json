@@ -1,0 +1,13 @@
+{
+  "loader": "neoforge:obj",
+  "model": "piranport:models/item/italian_triple_381mm_gun_held.obj",
+  "automatic_culling": false,
+  "emissive_ambient": false,
+  "flip_v": false,
+  "gui_light": "front",
+  "textures": {
+    "particle": "piranport:item/italian_triple_381mm_gun_turret",
+    "armor": "piranport:item/italian_triple_381mm_gun_turret",
+    "muzzle": "piranport:item/italian_triple_381mm_gun_turret"
+  }
+}

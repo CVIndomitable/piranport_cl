@@ -137,22 +137,22 @@ public class ModItems {
     public static final DeferredItem<Item> BRITISH_TRIPLE_16INCH_GUN =
             WeaponItems.CATALOG_GUNS.get("british_triple_16inch_gun");
     public static final DeferredItem<Item> GERMAN_TWIN_380MM_GUN = WeaponItems.GERMAN_TWIN_380MM_GUN;
-    /** 德国双联203毫米炮（07 表，双联·精锐）；手持 3D 模型由 GermanTwin203mmGunRenderer 渲染。 */
+    /** 德国双联203毫米炮（07 表，双联·精锐）。 */
     public static final DeferredItem<Item> GERMAN_TWIN_203MM_GUN =
             WeaponItems.CATALOG_GUNS.get("german_twin_203mm_gun");
-    /** 德国三联203毫米炮（07 表，三联·精锐）；手持 3D 模型由 GermanTriple203mmGunRenderer 渲染。 */
+    /** 德国三联203毫米炮（07 表，三联·精锐）。 */
     public static final DeferredItem<Item> GERMAN_TRIPLE_203MM_GUN =
             WeaponItems.CATALOG_GUNS.get("german_triple_203mm_gun");
-    /** 德国三联283毫米炮（07 表）；手持 3D 模型由 GermanTriple283mmGunRenderer 渲染。 */
+    /** 德国三联283毫米炮（07 表）。 */
     public static final DeferredItem<Item> GERMAN_TRIPLE_283MM_GUN =
             WeaponItems.CATALOG_GUNS.get("german_triple_283mm_gun");
-    /** 意大利三联305毫米炮（07 表）；手持 3D 模型由 ItalianTriple305mmGunRenderer 渲染。 */
+    /** 意大利三联305毫米炮（07 表）。 */
     public static final DeferredItem<Item> ITALIAN_TRIPLE_305MM_GUN =
             WeaponItems.CATALOG_GUNS.get("italian_triple_305mm_gun");
-    /** 美国三联12英寸炮（07 表）；手持 3D 模型由 UsTriple12inchGunRenderer 渲染。 */
+    /** 美国三联12英寸炮（07 表）。 */
     public static final DeferredItem<Item> US_TRIPLE_12INCH_GUN =
             WeaponItems.CATALOG_GUNS.get("us_triple_12inch_gun");
-    /** 意大利三联320毫米炮（07 表）；手持 3D 模型由 ItalianTriple320mmGunRenderer 渲染。 */
+    /** 意大利三联320毫米炮（07 表）。 */
     public static final DeferredItem<Item> ITALIAN_TRIPLE_320MM_GUN =
             WeaponItems.CATALOG_GUNS.get("italian_triple_320mm_gun");
     /** 博福斯双联120毫米炮（07 表）；物品模型按手持和舰装场景切换。 */

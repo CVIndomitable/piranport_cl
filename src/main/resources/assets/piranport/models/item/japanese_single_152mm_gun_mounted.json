@@ -1,0 +1,472 @@
+{
+  "gui_light": "front",
+  "textures": {"particle": "piranport:item/japanese_single_152mm_gun_shield", "shield": "piranport:item/japanese_single_152mm_gun_shield", "muzzle": "piranport:item/japanese_single_152mm_gun_shield"},
+  "elements": [
+    {
+      "name": "Turntable flange rear",
+      "from": [5.88, 7.6, 2.95],
+      "to": [10.12, 8.22, 3.1],
+      "faces": {
+        "north": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Turntable flange front",
+      "from": [5.88, 7.6, 9.45],
+      "to": [10.12, 8.22, 9.6],
+      "faces": {
+        "south": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Turntable flange port side",
+      "from": [3.8, 7.6, 5.03],
+      "to": [3.9499999999999997, 8.22, 7.52],
+      "faces": {
+        "west": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Turntable flange starboard side",
+      "from": [12.049999999999999, 7.6, 5.03],
+      "to": [12.2, 8.22, 7.52],
+      "faces": {
+        "east": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Turntable flange port rear",
+      "from": [3.8, 7.6, 5.03],
+      "to": [6.741564, 8.22, 5.180000000000001],
+      "rotation": {"origin": [3.8, 7.6, 5.03], "axis": "y", "angle": 45},
+      "faces": {
+        "north": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Turntable flange starboard rear",
+      "from": [10.12, 7.6, 2.95],
+      "to": [13.061564, 8.22, 3.1],
+      "rotation": {"origin": [10.12, 7.6, 2.95], "axis": "y", "angle": -45},
+      "faces": {
+        "north": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Turntable flange port front",
+      "from": [3.8, 7.6, 7.369999999999999],
+      "to": [6.741564, 8.22, 7.52],
+      "rotation": {"origin": [3.8, 7.6, 7.52], "axis": "y", "angle": -45},
+      "faces": {
+        "south": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Turntable flange starboard front",
+      "from": [10.12, 7.6, 9.45],
+      "to": [13.061564, 8.22, 9.6],
+      "rotation": {"origin": [10.12, 7.6, 9.6], "axis": "y", "angle": 45},
+      "faces": {
+        "south": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Turntable collar rear",
+      "from": [6.15, 8.22, 3.45],
+      "to": [9.85, 9.3, 3.6],
+      "faces": {
+        "north": {"uv": [14.0, 13.75, 15.25, 15.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Turntable collar front",
+      "from": [6.15, 8.22, 8.95],
+      "to": [9.85, 9.3, 9.1],
+      "faces": {
+        "south": {"uv": [14.0, 13.75, 15.25, 15.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Turntable collar port side",
+      "from": [4.35, 8.22, 5.25],
+      "to": [4.5, 9.3, 7.3],
+      "faces": {
+        "west": {"uv": [14.0, 13.75, 15.25, 15.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Turntable collar starboard side",
+      "from": [11.5, 8.22, 5.25],
+      "to": [11.65, 9.3, 7.3],
+      "faces": {
+        "east": {"uv": [14.0, 13.75, 15.25, 15.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Turntable collar port rear",
+      "from": [4.35, 8.22, 5.25],
+      "to": [6.895584, 9.3, 5.4],
+      "rotation": {"origin": [4.35, 8.22, 5.25], "axis": "y", "angle": 45},
+      "faces": {
+        "north": {"uv": [14.0, 13.75, 15.25, 15.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Turntable collar starboard rear",
+      "from": [9.85, 8.22, 3.45],
+      "to": [12.395584, 9.3, 3.6],
+      "rotation": {"origin": [9.85, 8.22, 3.45], "axis": "y", "angle": -45},
+      "faces": {
+        "north": {"uv": [14.0, 13.75, 15.25, 15.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Turntable collar port front",
+      "from": [4.35, 8.22, 7.1499999999999995],
+      "to": [6.895584, 9.3, 7.3],
+      "rotation": {"origin": [4.35, 8.22, 7.3], "axis": "y", "angle": -45},
+      "faces": {
+        "south": {"uv": [14.0, 13.75, 15.25, 15.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Turntable collar starboard front",
+      "from": [9.85, 8.22, 8.95],
+      "to": [12.395584, 9.3, 9.1],
+      "rotation": {"origin": [9.85, 8.22, 9.1], "axis": "y", "angle": 45},
+      "faces": {
+        "south": {"uv": [14.0, 13.75, 15.25, 15.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Armored drum rear",
+      "from": [5.25, 9.22, 2.0],
+      "to": [10.75, 17.75, 2.15],
+      "faces": {
+        "north": {"uv": [7.25, 6.75, 11.5, 11.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Armored drum front",
+      "from": [5.25, 9.22, 10.4],
+      "to": [10.75, 17.75, 10.55],
+      "faces": {
+        "south": {"uv": [7.25, 6.75, 11.5, 11.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Armored drum port side",
+      "from": [2.4, 9.22, 4.85],
+      "to": [2.55, 17.75, 7.7],
+      "faces": {
+        "west": {"uv": [7.25, 6.75, 11.5, 11.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Armored drum starboard side",
+      "from": [13.45, 9.22, 4.85],
+      "to": [13.6, 17.75, 7.7],
+      "faces": {
+        "east": {"uv": [7.25, 6.75, 11.5, 11.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Armored drum port rear",
+      "from": [2.4, 9.22, 4.85],
+      "to": [6.430509, 17.75, 5.0],
+      "rotation": {"origin": [2.4, 9.22, 4.85], "axis": "y", "angle": 45},
+      "faces": {
+        "north": {"uv": [7.25, 6.75, 11.5, 11.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Armored drum starboard rear",
+      "from": [10.75, 9.22, 2.0],
+      "to": [14.780509, 17.75, 2.15],
+      "rotation": {"origin": [10.75, 9.22, 2.0], "axis": "y", "angle": -45},
+      "faces": {
+        "north": {"uv": [7.25, 6.75, 11.5, 11.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Armored drum port front",
+      "from": [2.4, 9.22, 7.55],
+      "to": [6.430509, 17.75, 7.7],
+      "rotation": {"origin": [2.4, 9.22, 7.7], "axis": "y", "angle": -45},
+      "faces": {
+        "south": {"uv": [7.25, 6.75, 11.5, 11.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Armored drum starboard front",
+      "from": [10.75, 9.22, 10.4],
+      "to": [14.780509, 17.75, 10.55],
+      "rotation": {"origin": [10.75, 9.22, 10.55], "axis": "y", "angle": 45},
+      "faces": {
+        "south": {"uv": [11.75, 6.75, 15.0, 11.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Canvas surround",
+      "from": [5.9, 10.68, 10.4],
+      "to": [10.1, 15.56, 10.72],
+      "faces": {
+        "north": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"},
+        "south": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"},
+        "west": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"},
+        "east": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"},
+        "up": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"},
+        "down": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Canvas skirt",
+      "from": [6.02, 10.82, 10.72],
+      "to": [9.98, 15.42, 11.26],
+      "faces": {
+        "south": {"uv": [11.75, 11.75, 13.0, 13.25], "texture": "#shield"},
+        "west": {"uv": [7.25, 11.75, 9.5, 14.5], "texture": "#shield"},
+        "east": {"uv": [7.25, 11.75, 9.5, 14.5], "texture": "#shield"},
+        "up": {"uv": [9.75, 11.75, 11.5, 13.75], "texture": "#shield"},
+        "down": {"uv": [7.25, 11.75, 9.5, 14.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Canvas folds",
+      "from": [6.4, 11.4, 11.26],
+      "to": [9.6, 14.97, 12.03],
+      "faces": {
+        "south": {"uv": [11.75, 11.75, 13.0, 13.25], "texture": "#shield"},
+        "west": {"uv": [7.25, 11.75, 9.5, 14.5], "texture": "#shield"},
+        "east": {"uv": [7.25, 11.75, 9.5, 14.5], "texture": "#shield"},
+        "up": {"uv": [9.75, 11.75, 11.5, 13.75], "texture": "#shield"},
+        "down": {"uv": [7.25, 11.75, 9.5, 14.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Canvas sleeve",
+      "from": [7.02, 12.27, 12.03],
+      "to": [8.98, 14.23, 12.85],
+      "faces": {
+        "south": {"uv": [11.75, 11.75, 13.0, 13.25], "texture": "#shield"},
+        "west": {"uv": [7.25, 11.75, 9.5, 14.5], "texture": "#shield"},
+        "east": {"uv": [7.25, 11.75, 9.5, 14.5], "texture": "#shield"},
+        "up": {"uv": [9.75, 11.75, 11.5, 13.75], "texture": "#shield"},
+        "down": {"uv": [7.25, 11.75, 9.5, 14.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Barrel",
+      "from": [7.36, 12.61, 12.85],
+      "to": [8.64, 13.89, 26],
+      "faces": {
+        "south": {"uv": [13.25, 11.75, 14.5, 13.0], "texture": "#muzzle"},
+        "west": {"uv": [0.0, 13.5, 6.75, 14.0], "texture": "#shield"},
+        "east": {"uv": [0.0, 13.5, 6.75, 14.0], "texture": "#shield"},
+        "up": {"uv": [0.0, 14.25, 6.75, 14.75], "texture": "#shield"},
+        "down": {"uv": [0.0, 15.0, 6.75, 15.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Armored drum cover center",
+      "from": [2.4, 9.22, 4.85],
+      "to": [13.6, 17.75, 7.7],
+      "faces": {
+        "up": {"texture": "#shield", "uv": [4.25, 3.5, 4.5, 3.75]},
+        "down": {"texture": "#shield", "uv": [4.25, 10.25, 4.5, 10.5]}
+      }
+    },
+    {
+      "name": "Armored drum cover rear",
+      "from": [5.25, 9.22, 2.0],
+      "to": [10.75, 17.75, 4.85],
+      "faces": {
+        "up": {"texture": "#shield", "uv": [4.25, 3.5, 4.5, 3.75]},
+        "down": {"texture": "#shield", "uv": [4.25, 10.25, 4.5, 10.5]}
+      }
+    },
+    {
+      "name": "Armored drum cover front",
+      "from": [5.25, 9.22, 7.7],
+      "to": [10.75, 17.75, 10.55],
+      "faces": {
+        "up": {"texture": "#shield", "uv": [4.25, 3.5, 4.5, 3.75]},
+        "down": {"texture": "#shield", "uv": [4.25, 10.25, 4.5, 10.5]}
+      }
+    },
+    {
+      "name": "Armored drum cover corner 1",
+      "from": [10.75, 9.22, 2.0],
+      "to": [14.78050865, 17.75, 4.01525433],
+      "rotation": {"origin": [10.75, 9.22, 2.0], "axis": "y", "angle": -45},
+      "faces": {
+        "up": {"texture": "#shield", "uv": [4.25, 3.5, 4.5, 3.75]},
+        "down": {"texture": "#shield", "uv": [4.25, 10.25, 4.5, 10.5]}
+      }
+    },
+    {
+      "name": "Armored drum cover corner 2",
+      "from": [10.75, 9.22, 8.53474567],
+      "to": [14.78050865, 17.75, 10.55],
+      "rotation": {"origin": [10.75, 9.22, 10.55], "axis": "y", "angle": 45},
+      "faces": {
+        "up": {"texture": "#shield", "uv": [4.25, 3.5, 4.5, 3.75]},
+        "down": {"texture": "#shield", "uv": [4.25, 10.25, 4.5, 10.5]}
+      }
+    },
+    {
+      "name": "Armored drum cover corner 3",
+      "from": [2.4, 9.22, 5.68474567],
+      "to": [6.43050865, 17.75, 7.7],
+      "rotation": {"origin": [2.4, 9.22, 7.700000000000001], "axis": "y", "angle": -45},
+      "faces": {
+        "up": {"texture": "#shield", "uv": [4.25, 3.5, 4.5, 3.75]},
+        "down": {"texture": "#shield", "uv": [4.25, 10.25, 4.5, 10.5]}
+      }
+    },
+    {
+      "name": "Armored drum cover corner 4",
+      "from": [2.4, 9.22, 4.85],
+      "to": [6.43050865, 17.75, 6.86525433],
+      "rotation": {"origin": [2.4, 9.22, 4.85], "axis": "y", "angle": 45},
+      "faces": {
+        "up": {"texture": "#shield", "uv": [4.25, 3.5, 4.5, 3.75]},
+        "down": {"texture": "#shield", "uv": [4.25, 10.25, 4.5, 10.5]}
+      }
+    },
+    {
+      "name": "Turntable flange cover center",
+      "from": [3.8, 7.6, 5.03],
+      "to": [12.2, 8.22, 7.52],
+      "faces": {
+        "up": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]},
+        "down": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]}
+      }
+    },
+    {
+      "name": "Turntable flange cover rear",
+      "from": [5.88, 7.6, 2.95],
+      "to": [10.12, 8.22, 5.03],
+      "faces": {
+        "up": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]},
+        "down": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]}
+      }
+    },
+    {
+      "name": "Turntable flange cover front",
+      "from": [5.88, 7.6, 7.52],
+      "to": [10.12, 8.22, 9.6],
+      "faces": {
+        "up": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]},
+        "down": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]}
+      }
+    },
+    {
+      "name": "Turntable flange cover corner 1",
+      "from": [10.12, 7.6, 2.95],
+      "to": [13.06156421, 8.22, 4.4207821],
+      "rotation": {"origin": [10.12, 7.6, 2.95], "axis": "y", "angle": -45},
+      "faces": {
+        "up": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]},
+        "down": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]}
+      }
+    },
+    {
+      "name": "Turntable flange cover corner 2",
+      "from": [10.12, 7.6, 8.1292179],
+      "to": [13.06156421, 8.22, 9.6],
+      "rotation": {"origin": [10.12, 7.6, 9.6], "axis": "y", "angle": 45},
+      "faces": {
+        "up": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]},
+        "down": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]}
+      }
+    },
+    {
+      "name": "Turntable flange cover corner 3",
+      "from": [3.8, 7.6, 6.0492179],
+      "to": [6.74156421, 8.22, 7.52],
+      "rotation": {"origin": [3.8, 7.6, 7.52], "axis": "y", "angle": -45},
+      "faces": {
+        "up": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]},
+        "down": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]}
+      }
+    },
+    {
+      "name": "Turntable flange cover corner 4",
+      "from": [3.8, 7.6, 5.03],
+      "to": [6.74156421, 8.22, 6.5007821],
+      "rotation": {"origin": [3.8, 7.6, 5.03], "axis": "y", "angle": 45},
+      "faces": {
+        "up": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]},
+        "down": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]}
+      }
+    },
+    {
+      "name": "Turntable collar cover center",
+      "from": [4.35, 8.22, 5.25],
+      "to": [11.65, 9.3, 7.3],
+      "faces": {
+        "up": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]},
+        "down": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]}
+      }
+    },
+    {
+      "name": "Turntable collar cover rear",
+      "from": [6.15, 8.22, 3.45],
+      "to": [9.85, 9.3, 5.25],
+      "faces": {
+        "up": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]},
+        "down": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]}
+      }
+    },
+    {
+      "name": "Turntable collar cover front",
+      "from": [6.15, 8.22, 7.3],
+      "to": [9.85, 9.3, 9.1],
+      "faces": {
+        "up": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]},
+        "down": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]}
+      }
+    },
+    {
+      "name": "Turntable collar cover corner 1",
+      "from": [9.85, 8.22, 3.45],
+      "to": [12.39558441, 9.3, 4.72279221],
+      "rotation": {"origin": [9.85, 8.22, 3.45], "axis": "y", "angle": -45},
+      "faces": {
+        "up": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]},
+        "down": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]}
+      }
+    },
+    {
+      "name": "Turntable collar cover corner 2",
+      "from": [9.85, 8.22, 7.82720779],
+      "to": [12.39558441, 9.3, 9.1],
+      "rotation": {"origin": [9.85, 8.22, 9.1], "axis": "y", "angle": 45},
+      "faces": {
+        "up": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]},
+        "down": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]}
+      }
+    },
+    {
+      "name": "Turntable collar cover corner 3",
+      "from": [4.35, 8.22, 6.02720779],
+      "to": [6.89558441, 9.3, 7.3],
+      "rotation": {"origin": [4.35, 8.22, 7.3], "axis": "y", "angle": -45},
+      "faces": {
+        "up": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]},
+        "down": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]}
+      }
+    },
+    {
+      "name": "Turntable collar cover corner 4",
+      "from": [4.35, 8.22, 5.25],
+      "to": [6.89558441, 9.3, 6.52279221],
+      "rotation": {"origin": [4.35, 8.22, 5.25], "axis": "y", "angle": 45},
+      "faces": {
+        "up": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]},
+        "down": {"texture": "#shield", "uv": [10.5, 3.0, 10.75, 3.25]}
+      }
+    }
+  ]
+}

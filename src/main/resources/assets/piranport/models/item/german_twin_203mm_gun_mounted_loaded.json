@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/german_twin_203mm_gun_mounted",
+  "textures": {
+    "muzzle": "piranport:item/german_twin_203mm_gun_turret_loaded"
+  }
+}

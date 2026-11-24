@@ -1,0 +1,451 @@
+{
+  "gui_light": "front",
+  "textures": {"particle": "piranport:item/us_triple_16inch_gun_mk7_turret", "armor": "piranport:item/us_triple_16inch_gun_mk7_turret", "muzzle": "piranport:item/us_triple_16inch_gun_mk7_turret"},
+  "elements": [
+    {
+      "name": "Grip bracket",
+      "from": [5.06, 6.58, 4.35],
+      "to": [10.94, 8.7, 9.65],
+      "faces": {
+        "north": {"uv": [14.5, 0.0, 15.5, 1.0], "texture": "#armor"},
+        "south": {"uv": [14.5, 0.0, 15.5, 1.0], "texture": "#armor"},
+        "west": {"uv": [14.5, 0.0, 15.5, 1.0], "texture": "#armor"},
+        "east": {"uv": [14.5, 0.0, 15.5, 1.0], "texture": "#armor"},
+        "down": {"uv": [14.5, 0.0, 15.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Grip",
+      "from": [6.02, 0.55, 4.97],
+      "to": [9.98, 6.58, 8.72],
+      "faces": {
+        "north": {"uv": [7.5, 12.0, 11.0, 15.75], "texture": "#armor"},
+        "south": {"uv": [7.5, 12.0, 11.0, 15.75], "texture": "#armor"},
+        "west": {"uv": [7.5, 12.0, 11.0, 15.75], "texture": "#armor"},
+        "east": {"uv": [7.5, 12.0, 11.0, 15.75], "texture": "#armor"},
+        "down": {"uv": [14.5, 0.0, 15.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Armor middle",
+      "from": [1.08, 8.7, 0.37],
+      "to": [14.92, 15.655277785, 12.0],
+      "faces": {
+        "down": {"uv": [14.5, 0.0, 15.5, 1.0], "texture": "#armor"},
+        "west": {"uv": [10.75, 0.0, 11.75, 1.0], "texture": "#armor"},
+        "east": {"uv": [10.75, 0.0, 11.75, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Armor north",
+      "from": [2.7, 8.7, -1.25],
+      "to": [13.3, 15.655277785, 0.37],
+      "faces": {
+        "down": {"uv": [14.5, 0.0, 15.5, 1.0], "texture": "#armor"},
+        "north": {"uv": [8.5, 5.0, 15.5, 7.25], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Armor north port bevel",
+      "from": [1.08, 8.7, 0.37],
+      "to": [3.371025971, 15.655277785, 1.515512986],
+      "rotation": {"axis": "y", "angle": 45, "origin": [1.08, 8.7, 0.37]},
+      "faces": {
+        "down": {"uv": [14.5, 0.0, 15.5, 1.0], "texture": "#armor"},
+        "north": {"uv": [13.25, 0.0, 14.25, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Armor north starboard bevel",
+      "from": [13.3, 8.7, -1.25],
+      "to": [15.591025971, 15.655277785, -0.104487014],
+      "rotation": {"axis": "y", "angle": -45, "origin": [13.3, 8.7, -1.25]},
+      "faces": {
+        "down": {"uv": [14.5, 0.0, 15.5, 1.0], "texture": "#armor"},
+        "north": {"uv": [13.25, 0.0, 14.25, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Armor south",
+      "from": [2.38, 8.7, 12.0],
+      "to": [13.62, 15.655277785, 13.3],
+      "faces": {
+        "down": {"uv": [14.5, 0.0, 15.5, 1.0], "texture": "#armor"},
+        "south": {"uv": [8.5, 1.5, 15.5, 4.5], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Armor south port bevel",
+      "from": [1.08, 8.7, 11.080761184],
+      "to": [2.918477631, 15.655277785, 12.0],
+      "rotation": {"axis": "y", "angle": -45, "origin": [1.08, 8.7, 12.0]},
+      "faces": {
+        "down": {"uv": [14.5, 0.0, 15.5, 1.0], "texture": "#armor"},
+        "south": {"uv": [12.0, 0.0, 13.0, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Armor south starboard bevel",
+      "from": [13.62, 8.7, 12.380761184],
+      "to": [15.458477631, 15.655277785, 13.3],
+      "rotation": {"axis": "y", "angle": 45, "origin": [13.62, 8.7, 13.3]},
+      "faces": {
+        "down": {"uv": [14.5, 0.0, 15.5, 1.0], "texture": "#armor"},
+        "south": {"uv": [12.0, 0.0, 13.0, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Center deck",
+      "from": [1.08, 15.655277785, 4.22],
+      "to": [14.92, 17.25, 8.15],
+      "faces": {
+        "up": {"uv": [0.0, 0.0, 8.0, 2.25], "texture": "#armor"},
+        "west": {"uv": [10.75, 0.0, 11.75, 1.0], "texture": "#armor"},
+        "east": {"uv": [10.75, 0.0, 11.75, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Aft roof slope",
+      "from": [1.08, 13.799275834, 0.37],
+      "to": [14.92, 15.655277785, 4.537209971],
+      "rotation": {"axis": "x", "angle": -22.5, "origin": [8, 15.655277785, 0.37]},
+      "faces": {
+        "up": {"uv": [0.0, 5.0, 8.0, 7.25], "texture": "#armor"},
+        "west": {"uv": [10.75, 0.0, 11.75, 1.0], "texture": "#armor"},
+        "east": {"uv": [10.75, 0.0, 11.75, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Forward roof slope",
+      "from": [1.08, 13.799275834, 7.832790029],
+      "to": [14.92, 15.655277785, 12.0],
+      "rotation": {"axis": "x", "angle": 22.5, "origin": [8, 15.655277785, 12.0]},
+      "faces": {
+        "up": {"uv": [0.0, 2.5, 8.0, 4.75], "texture": "#armor"},
+        "west": {"uv": [10.75, 0.0, 11.75, 1.0], "texture": "#armor"},
+        "east": {"uv": [10.75, 0.0, 11.75, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Aft lip",
+      "from": [2.7, 14.655277785, -1.25],
+      "to": [13.3, 15.655277785, 0.37],
+      "faces": {
+        "up": {"uv": [9.5, 0.0, 10.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Aft port lip",
+      "from": [1.08, 14.655277785, 0.37],
+      "to": [3.371025971, 15.655277785, 1.515512986],
+      "rotation": {"axis": "y", "angle": 45, "origin": [1.08, 15.655277785, 0.37]},
+      "faces": {
+        "up": {"uv": [9.5, 0.0, 10.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Aft starboard lip",
+      "from": [13.3, 14.655277785, -1.25],
+      "to": [15.591025971, 15.655277785, -0.104487014],
+      "rotation": {"axis": "y", "angle": -45, "origin": [13.3, 15.655277785, -1.25]},
+      "faces": {
+        "up": {"uv": [9.5, 0.0, 10.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Forward lip",
+      "from": [2.38, 14.655277785, 12.0],
+      "to": [13.62, 15.655277785, 13.3],
+      "faces": {
+        "up": {"uv": [8.25, 0.0, 9.25, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Forward port lip",
+      "from": [1.08, 14.655277785, 11.080761184],
+      "to": [2.918477631, 15.655277785, 12.0],
+      "rotation": {"axis": "y", "angle": -45, "origin": [1.08, 15.655277785, 12.0]},
+      "faces": {
+        "up": {"uv": [8.25, 0.0, 9.25, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Forward starboard lip",
+      "from": [13.62, 14.655277785, 12.380761184],
+      "to": [15.458477631, 15.655277785, 13.3],
+      "rotation": {"axis": "y", "angle": 45, "origin": [13.62, 15.655277785, 13.3]},
+      "faces": {
+        "up": {"uv": [8.25, 0.0, 9.25, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Port rangefinder",
+      "from": [0, 11.95, 0.7],
+      "to": [1.45, 13.84, 2.82],
+      "faces": {
+        "north": {"uv": [7.25, 7.75, 9.5, 10.0], "texture": "#armor"},
+        "south": {"uv": [7.25, 7.75, 9.5, 10.0], "texture": "#armor"},
+        "west": {"uv": [7.25, 7.75, 9.5, 10.0], "texture": "#armor"},
+        "east": {"uv": [7.25, 7.75, 9.5, 10.0], "texture": "#armor"},
+        "up": {"uv": [5.5, 7.75, 6.75, 9.0], "texture": "#armor"},
+        "down": {"uv": [14.5, 0.0, 15.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Port access ladder",
+      "from": [0.96, 9.3, 7.45],
+      "to": [1.11, 13.43, 8.06],
+      "faces": {
+        "west": {"uv": [10.0, 7.75, 11.5, 11.5], "texture": "#armor"},
+        "up": {"uv": [5.5, 7.75, 6.75, 9.0], "texture": "#armor"},
+        "north": {"uv": [7.25, 7.75, 9.5, 10.0], "texture": "#armor"},
+        "south": {"uv": [7.25, 7.75, 9.5, 10.0], "texture": "#armor"},
+        "down": {"uv": [14.5, 0.0, 15.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Port maintenance step",
+      "from": [0.65, 8.7, 6.53],
+      "to": [1.11, 9.09, 10.43],
+      "faces": {
+        "west": {"uv": [7.25, 7.75, 9.5, 10.0], "texture": "#armor"},
+        "up": {"uv": [5.5, 7.75, 6.75, 9.0], "texture": "#armor"},
+        "north": {"uv": [7.25, 7.75, 9.5, 10.0], "texture": "#armor"},
+        "south": {"uv": [7.25, 7.75, 9.5, 10.0], "texture": "#armor"},
+        "down": {"uv": [14.5, 0.0, 15.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Starboard rangefinder",
+      "from": [14.55, 11.95, 0.7],
+      "to": [16, 13.84, 2.82],
+      "faces": {
+        "north": {"uv": [7.25, 7.75, 9.5, 10.0], "texture": "#armor"},
+        "south": {"uv": [7.25, 7.75, 9.5, 10.0], "texture": "#armor"},
+        "west": {"uv": [7.25, 7.75, 9.5, 10.0], "texture": "#armor"},
+        "east": {"uv": [7.25, 7.75, 9.5, 10.0], "texture": "#armor"},
+        "up": {"uv": [5.5, 7.75, 6.75, 9.0], "texture": "#armor"},
+        "down": {"uv": [14.5, 0.0, 15.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Starboard access ladder",
+      "from": [14.89, 9.3, 7.45],
+      "to": [15.04, 13.43, 8.06],
+      "faces": {
+        "east": {"uv": [10.0, 7.75, 11.5, 11.5], "texture": "#armor"},
+        "up": {"uv": [5.5, 7.75, 6.75, 9.0], "texture": "#armor"},
+        "north": {"uv": [7.25, 7.75, 9.5, 10.0], "texture": "#armor"},
+        "south": {"uv": [7.25, 7.75, 9.5, 10.0], "texture": "#armor"},
+        "down": {"uv": [14.5, 0.0, 15.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Starboard maintenance step",
+      "from": [14.89, 8.7, 6.53],
+      "to": [15.35, 9.09, 10.43],
+      "faces": {
+        "east": {"uv": [7.25, 7.75, 9.5, 10.0], "texture": "#armor"},
+        "up": {"uv": [5.5, 7.75, 6.75, 9.0], "texture": "#armor"},
+        "north": {"uv": [7.25, 7.75, 9.5, 10.0], "texture": "#armor"},
+        "south": {"uv": [7.25, 7.75, 9.5, 10.0], "texture": "#armor"},
+        "down": {"uv": [14.5, 0.0, 15.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Barrel 1 canvas boot",
+      "from": [3.485, 11.065, 13.18],
+      "to": [5.635, 13.215, 14.53],
+      "rotation": {"axis": "z", "angle": 45, "origin": [4.56, 12.14, 13.18]},
+      "faces": {
+        "up": {"uv": [12.0, 7.75, 15.75, 9.75], "texture": "#armor"},
+        "west": {"uv": [12.0, 7.75, 15.75, 9.75], "texture": "#armor"},
+        "east": {"uv": [12.0, 10.0, 15.75, 11.5], "texture": "#armor"},
+        "down": {"uv": [12.0, 10.0, 15.75, 11.5], "texture": "#armor"},
+        "south": {"uv": [12.0, 7.75, 15.75, 9.75], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Barrel 1 canvas throat",
+      "from": [3.675, 11.255, 14.53],
+      "to": [5.445, 13.025, 15.33],
+      "rotation": {"axis": "z", "angle": 45, "origin": [4.56, 12.14, 14.53]},
+      "faces": {
+        "up": {"uv": [12.0, 7.75, 15.75, 9.75], "texture": "#armor"},
+        "west": {"uv": [12.0, 7.75, 15.75, 9.75], "texture": "#armor"},
+        "east": {"uv": [12.0, 10.0, 15.75, 11.5], "texture": "#armor"},
+        "down": {"uv": [12.0, 10.0, 15.75, 11.5], "texture": "#armor"},
+        "south": {"uv": [12.0, 10.0, 15.75, 11.5], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Barrel 1 root sleeve",
+      "from": [3.835, 11.415, 15.33],
+      "to": [5.285, 12.865, 18.3],
+      "rotation": {"axis": "z", "angle": 45, "origin": [4.56, 12.14, 15.33]},
+      "faces": {
+        "up": {"uv": [0.0, 13.25, 5.75, 14.5], "texture": "#armor", "rotation": 90},
+        "west": {"uv": [0.0, 13.25, 5.75, 14.5], "texture": "#armor"},
+        "east": {"uv": [5.75, 14.75, 0.0, 16.0], "texture": "#armor"},
+        "down": {"uv": [0.0, 14.75, 5.75, 16.0], "texture": "#armor", "rotation": 90},
+        "south": {"uv": [0.0, 11.75, 7.0, 13.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Barrel 1 middle sleeve",
+      "from": [3.955, 11.535, 18.3],
+      "to": [5.165, 12.745, 22.5],
+      "rotation": {"axis": "z", "angle": 45, "origin": [4.56, 12.14, 18.3]},
+      "faces": {
+        "up": {"uv": [0.0, 13.25, 5.75, 14.5], "texture": "#armor", "rotation": 90},
+        "west": {"uv": [0.0, 13.25, 5.75, 14.5], "texture": "#armor"},
+        "east": {"uv": [5.75, 14.75, 0.0, 16.0], "texture": "#armor"},
+        "down": {"uv": [0.0, 14.75, 5.75, 16.0], "texture": "#armor", "rotation": 90},
+        "south": {"uv": [0.0, 11.75, 7.0, 13.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Barrel 1 tube",
+      "from": [4.065, 11.645, 22.5],
+      "to": [5.055, 12.635, 31.25],
+      "rotation": {"axis": "z", "angle": 45, "origin": [4.56, 12.14, 22.5]},
+      "faces": {
+        "up": {"uv": [0.0, 10.25, 7.0, 11.5], "texture": "#armor", "rotation": 90},
+        "west": {"uv": [0.0, 10.25, 7.0, 11.5], "texture": "#armor"},
+        "east": {"uv": [0.0, 11.75, 7.0, 13.0], "texture": "#armor"},
+        "down": {"uv": [0.0, 11.75, 7.0, 13.0], "texture": "#armor", "rotation": 90},
+        "south": {"uv": [12.75, 12.5, 15.0, 14.75], "texture": "#muzzle"}
+      }
+    },
+    {
+      "name": "Barrel 2 canvas boot",
+      "from": [6.925, 11.065, 13.18],
+      "to": [9.075, 13.215, 14.53],
+      "rotation": {"axis": "z", "angle": 45, "origin": [8, 12.14, 13.18]},
+      "faces": {
+        "up": {"uv": [12.0, 7.75, 15.75, 9.75], "texture": "#armor"},
+        "west": {"uv": [12.0, 7.75, 15.75, 9.75], "texture": "#armor"},
+        "east": {"uv": [12.0, 10.0, 15.75, 11.5], "texture": "#armor"},
+        "down": {"uv": [12.0, 10.0, 15.75, 11.5], "texture": "#armor"},
+        "south": {"uv": [12.0, 7.75, 15.75, 9.75], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Barrel 2 canvas throat",
+      "from": [7.115, 11.255, 14.53],
+      "to": [8.885, 13.025, 15.33],
+      "rotation": {"axis": "z", "angle": 45, "origin": [8, 12.14, 14.53]},
+      "faces": {
+        "up": {"uv": [12.0, 7.75, 15.75, 9.75], "texture": "#armor"},
+        "west": {"uv": [12.0, 7.75, 15.75, 9.75], "texture": "#armor"},
+        "east": {"uv": [12.0, 10.0, 15.75, 11.5], "texture": "#armor"},
+        "down": {"uv": [12.0, 10.0, 15.75, 11.5], "texture": "#armor"},
+        "south": {"uv": [12.0, 10.0, 15.75, 11.5], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Barrel 2 root sleeve",
+      "from": [7.275, 11.415, 15.33],
+      "to": [8.725, 12.865, 18.3],
+      "rotation": {"axis": "z", "angle": 45, "origin": [8, 12.14, 15.33]},
+      "faces": {
+        "up": {"uv": [0.0, 13.25, 5.75, 14.5], "texture": "#armor", "rotation": 90},
+        "west": {"uv": [0.0, 13.25, 5.75, 14.5], "texture": "#armor"},
+        "east": {"uv": [5.75, 14.75, 0.0, 16.0], "texture": "#armor"},
+        "down": {"uv": [0.0, 14.75, 5.75, 16.0], "texture": "#armor", "rotation": 90},
+        "south": {"uv": [0.0, 11.75, 7.0, 13.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Barrel 2 middle sleeve",
+      "from": [7.395, 11.535, 18.3],
+      "to": [8.605, 12.745, 22.5],
+      "rotation": {"axis": "z", "angle": 45, "origin": [8, 12.14, 18.3]},
+      "faces": {
+        "up": {"uv": [0.0, 13.25, 5.75, 14.5], "texture": "#armor", "rotation": 90},
+        "west": {"uv": [0.0, 13.25, 5.75, 14.5], "texture": "#armor"},
+        "east": {"uv": [5.75, 14.75, 0.0, 16.0], "texture": "#armor"},
+        "down": {"uv": [0.0, 14.75, 5.75, 16.0], "texture": "#armor", "rotation": 90},
+        "south": {"uv": [0.0, 11.75, 7.0, 13.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Barrel 2 tube",
+      "from": [7.505, 11.645, 22.5],
+      "to": [8.495, 12.635, 31.25],
+      "rotation": {"axis": "z", "angle": 45, "origin": [8, 12.14, 22.5]},
+      "faces": {
+        "up": {"uv": [0.0, 10.25, 7.0, 11.5], "texture": "#armor", "rotation": 90},
+        "west": {"uv": [0.0, 10.25, 7.0, 11.5], "texture": "#armor"},
+        "east": {"uv": [0.0, 11.75, 7.0, 13.0], "texture": "#armor"},
+        "down": {"uv": [0.0, 11.75, 7.0, 13.0], "texture": "#armor", "rotation": 90},
+        "south": {"uv": [12.75, 12.5, 15.0, 14.75], "texture": "#muzzle"}
+      }
+    },
+    {
+      "name": "Barrel 3 canvas boot",
+      "from": [10.365, 11.065, 13.18],
+      "to": [12.515, 13.215, 14.53],
+      "rotation": {"axis": "z", "angle": 45, "origin": [11.44, 12.14, 13.18]},
+      "faces": {
+        "up": {"uv": [12.0, 7.75, 15.75, 9.75], "texture": "#armor"},
+        "west": {"uv": [12.0, 7.75, 15.75, 9.75], "texture": "#armor"},
+        "east": {"uv": [12.0, 10.0, 15.75, 11.5], "texture": "#armor"},
+        "down": {"uv": [12.0, 10.0, 15.75, 11.5], "texture": "#armor"},
+        "south": {"uv": [12.0, 7.75, 15.75, 9.75], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Barrel 3 canvas throat",
+      "from": [10.555, 11.255, 14.53],
+      "to": [12.325, 13.025, 15.33],
+      "rotation": {"axis": "z", "angle": 45, "origin": [11.44, 12.14, 14.53]},
+      "faces": {
+        "up": {"uv": [12.0, 7.75, 15.75, 9.75], "texture": "#armor"},
+        "west": {"uv": [12.0, 7.75, 15.75, 9.75], "texture": "#armor"},
+        "east": {"uv": [12.0, 10.0, 15.75, 11.5], "texture": "#armor"},
+        "down": {"uv": [12.0, 10.0, 15.75, 11.5], "texture": "#armor"},
+        "south": {"uv": [12.0, 10.0, 15.75, 11.5], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Barrel 3 root sleeve",
+      "from": [10.715, 11.415, 15.33],
+      "to": [12.165, 12.865, 18.3],
+      "rotation": {"axis": "z", "angle": 45, "origin": [11.44, 12.14, 15.33]},
+      "faces": {
+        "up": {"uv": [0.0, 13.25, 5.75, 14.5], "texture": "#armor", "rotation": 90},
+        "west": {"uv": [0.0, 13.25, 5.75, 14.5], "texture": "#armor"},
+        "east": {"uv": [5.75, 14.75, 0.0, 16.0], "texture": "#armor"},
+        "down": {"uv": [0.0, 14.75, 5.75, 16.0], "texture": "#armor", "rotation": 90},
+        "south": {"uv": [0.0, 11.75, 7.0, 13.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Barrel 3 middle sleeve",
+      "from": [10.835, 11.535, 18.3],
+      "to": [12.045, 12.745, 22.5],
+      "rotation": {"axis": "z", "angle": 45, "origin": [11.44, 12.14, 18.3]},
+      "faces": {
+        "up": {"uv": [0.0, 13.25, 5.75, 14.5], "texture": "#armor", "rotation": 90},
+        "west": {"uv": [0.0, 13.25, 5.75, 14.5], "texture": "#armor"},
+        "east": {"uv": [5.75, 14.75, 0.0, 16.0], "texture": "#armor"},
+        "down": {"uv": [0.0, 14.75, 5.75, 16.0], "texture": "#armor", "rotation": 90},
+        "south": {"uv": [0.0, 11.75, 7.0, 13.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Barrel 3 tube",
+      "from": [10.945, 11.645, 22.5],
+      "to": [11.935, 12.635, 31.25],
+      "rotation": {"axis": "z", "angle": 45, "origin": [11.44, 12.14, 22.5]},
+      "faces": {
+        "up": {"uv": [0.0, 10.25, 7.0, 11.5], "texture": "#armor", "rotation": 90},
+        "west": {"uv": [0.0, 10.25, 7.0, 11.5], "texture": "#armor"},
+        "east": {"uv": [0.0, 11.75, 7.0, 13.0], "texture": "#armor"},
+        "down": {"uv": [0.0, 11.75, 7.0, 13.0], "texture": "#armor", "rotation": 90},
+        "south": {"uv": [12.75, 12.5, 15.0, 14.75], "texture": "#muzzle"}
+      }
+    }
+  ]
+}

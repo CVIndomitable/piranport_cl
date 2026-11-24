@@ -1,0 +1,95 @@
+{
+  "textures": {"particle": "piranport:item/us_twin_5inch_dp_gun_armor", "armor": "piranport:item/us_twin_5inch_dp_gun_armor", "muzzle": "piranport:item/us_twin_5inch_dp_gun_armor"},
+  "elements": [
+    {
+      "name": "training turntable",
+      "from": [1, 7, 1],
+      "to": [15, 9, 13],
+      "faces": {
+        "north": {"uv": [0.0, 11.0, 3.5, 11.5], "texture": "#armor"},
+        "south": {"uv": [0.0, 11.0, 3.5, 11.5], "texture": "#armor"},
+        "west": {"uv": [3.5, 11.0, 6.5, 11.5], "texture": "#armor"},
+        "east": {"uv": [3.5, 11.0, 6.5, 11.5], "texture": "#armor"},
+        "up": {"uv": [0.0, 7.75, 3.5, 10.75], "texture": "#armor"},
+        "down": {"uv": [0.0, 7.75, 3.5, 10.75], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "lower armor",
+      "from": [0, 9, 0],
+      "to": [16, 13, 18],
+      "faces": {
+        "north": {"uv": [9.0, 2.5, 13.0, 3.5], "texture": "#armor"},
+        "south": {"uv": [0.0, 6.5, 4.0, 7.5], "texture": "#armor"},
+        "west": {"uv": [4.0, 6.5, 8.5, 7.5], "texture": "#armor"},
+        "east": {"uv": [4.0, 6.5, 8.5, 7.5], "texture": "#armor"},
+        "down": {"uv": [8.5, 6.5, 12.5, 11.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "gunhouse roof and rear",
+      "from": [0, 13, 0],
+      "to": [16, 21, 10],
+      "faces": {
+        "north": {"uv": [9.0, 3.75, 13.0, 5.75], "texture": "#armor"},
+        "up": {"uv": [0.0, 0.0, 4.0, 2.5], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "gunhouse side armor",
+      "from": [0, 13, 0],
+      "to": [16, 21, 18],
+      "faces": {
+        "west": {"uv": [0.0, 3.75, 4.5, 5.75], "texture": "#armor"},
+        "east": {"uv": [4.5, 3.75, 9.0, 5.75], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "sloped forward shield",
+      "from": [0, 20.15, 10],
+      "to": [16, 21, 21.313708],
+      "rotation": {"origin": [8, 21, 10], "axis": "x", "angle": 45, "rescale": false},
+      "faces": {
+        "up": {"uv": [4.0, 0.0, 8.0, 2.75], "texture": "#armor"},
+        "west": {"texture": "#armor", "uv": [13.0, 9.0, 13.5, 9.5]},
+        "east": {"texture": "#armor", "uv": [13.0, 9.0, 13.5, 9.5]}
+      }
+    },
+    {
+      "name": "roof sight",
+      "from": [10, 21, 1],
+      "to": [14, 24, 4],
+      "faces": {
+        "north": {"uv": [13.5, 2.0, 14.5, 2.75], "texture": "#armor"},
+        "south": {"uv": [13.5, 2.0, 14.5, 2.75], "texture": "#armor"},
+        "west": {"uv": [14.5, 2.0, 15.25, 2.75], "texture": "#armor"},
+        "east": {"uv": [14.5, 2.0, 15.25, 2.75], "texture": "#armor"},
+        "up": {"uv": [13.5, 2.75, 14.5, 3.5], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "port barrel",
+      "from": [3, 16, 11],
+      "to": [5, 18, 32],
+      "faces": {
+        "south": {"uv": [13.5, 4.0, 14.0, 4.5], "texture": "#muzzle"},
+        "west": {"uv": [0.0, 12.5, 5.25, 13.0], "texture": "#armor"},
+        "east": {"uv": [0.0, 12.5, 5.25, 13.0], "texture": "#armor"},
+        "up": {"uv": [7.0, 10.5, 7.5, 15.75], "texture": "#armor"},
+        "down": {"uv": [7.75, 10.5, 8.25, 15.75], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "starboard barrel",
+      "from": [11, 16, 11],
+      "to": [13, 18, 32],
+      "faces": {
+        "south": {"uv": [13.5, 4.0, 14.0, 4.5], "texture": "#muzzle"},
+        "west": {"uv": [0.0, 12.5, 5.25, 13.0], "texture": "#armor"},
+        "east": {"uv": [0.0, 12.5, 5.25, 13.0], "texture": "#armor"},
+        "up": {"uv": [7.0, 10.5, 7.5, 15.75], "texture": "#armor"},
+        "down": {"uv": [7.75, 10.5, 8.25, 15.75], "texture": "#armor"}
+      }
+    }
+  ]
+}

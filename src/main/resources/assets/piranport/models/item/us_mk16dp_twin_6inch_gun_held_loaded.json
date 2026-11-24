@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/us_mk16dp_twin_6inch_gun_held",
+  "textures": {
+    "muzzle": "piranport:item/us_mk16dp_twin_6inch_gun_turret_loaded"
+  }
+}

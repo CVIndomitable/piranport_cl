@@ -1,0 +1,429 @@
+{
+  "gui_light": "front",
+  "textures": {"particle": "piranport:item/british_twin_6inch_gun_gunhouse", "steel": "piranport:item/british_twin_6inch_gun_gunhouse", "muzzle": "piranport:item/british_twin_6inch_gun_gunhouse"},
+  "elements": [
+    {
+      "name": "Training flange rear",
+      "from": [5.575, 7.85, 2.25],
+      "to": [10.425, 8.3, 2.37],
+      "faces": {
+        "north": {"uv": [12.0, 6.0, 15.75, 7.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Training flange front",
+      "from": [5.575, 7.85, 11.83],
+      "to": [10.425, 8.3, 11.95],
+      "faces": {
+        "south": {"uv": [12.0, 6.0, 15.75, 7.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Training flange port",
+      "from": [3.15, 7.85, 4.675],
+      "to": [3.27, 8.3, 9.525],
+      "faces": {
+        "west": {"uv": [12.0, 6.0, 15.75, 7.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Training flange starboard",
+      "from": [12.73, 7.85, 4.675],
+      "to": [12.85, 8.3, 9.525],
+      "faces": {
+        "east": {"uv": [12.0, 6.0, 15.75, 7.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Training flange port rear",
+      "from": [3.15, 7.85, 4.675],
+      "to": [6.579468, 8.3, 6.389734],
+      "rotation": {"axis": "y", "angle": 45, "origin": [3.15, 7.85, 4.675]},
+      "faces": {
+        "north": {"uv": [12.0, 6.0, 15.75, 7.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Training flange starboard rear",
+      "from": [10.425, 7.85, 2.25],
+      "to": [13.854468, 8.3, 3.964734],
+      "rotation": {"axis": "y", "angle": -45, "origin": [10.425, 7.85, 2.25]},
+      "faces": {
+        "north": {"uv": [12.0, 6.0, 15.75, 7.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Training flange port front",
+      "from": [3.15, 7.85, 7.810266],
+      "to": [6.579468, 8.3, 9.525],
+      "rotation": {"axis": "y", "angle": -45, "origin": [3.15, 7.85, 9.525]},
+      "faces": {
+        "south": {"uv": [12.0, 6.0, 15.75, 7.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Training flange starboard front",
+      "from": [10.425, 7.85, 10.235266],
+      "to": [13.854468, 8.3, 11.95],
+      "rotation": {"axis": "y", "angle": 45, "origin": [10.425, 7.85, 11.95]},
+      "faces": {
+        "south": {"uv": [12.0, 6.0, 15.75, 7.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable rear",
+      "from": [5.75, 8.3, 2.6],
+      "to": [10.25, 9.85, 2.72],
+      "faces": {
+        "north": {"uv": [12.0, 4.5, 15.75, 5.75], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable front",
+      "from": [5.75, 8.3, 11.48],
+      "to": [10.25, 9.85, 11.6],
+      "faces": {
+        "south": {"uv": [12.0, 4.5, 15.75, 5.75], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable port",
+      "from": [3.5, 8.3, 4.85],
+      "to": [3.62, 9.85, 9.35],
+      "faces": {
+        "west": {"uv": [12.0, 4.5, 15.75, 5.75], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable starboard",
+      "from": [12.38, 8.3, 4.85],
+      "to": [12.5, 9.85, 9.35],
+      "faces": {
+        "east": {"uv": [12.0, 4.5, 15.75, 5.75], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable port rear",
+      "from": [3.5, 8.3, 4.85],
+      "to": [6.681981, 9.85, 6.44099],
+      "rotation": {"axis": "y", "angle": 45, "origin": [3.5, 8.3, 4.85]},
+      "faces": {
+        "north": {"uv": [12.0, 4.5, 15.75, 5.75], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable starboard rear",
+      "from": [10.25, 8.3, 2.6],
+      "to": [13.431981, 9.85, 4.19099],
+      "rotation": {"axis": "y", "angle": -45, "origin": [10.25, 8.3, 2.6]},
+      "faces": {
+        "north": {"uv": [12.0, 4.5, 15.75, 5.75], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable port front",
+      "from": [3.5, 8.3, 7.75901],
+      "to": [6.681981, 9.85, 9.35],
+      "rotation": {"axis": "y", "angle": -45, "origin": [3.5, 8.3, 9.35]},
+      "faces": {
+        "south": {"uv": [12.0, 4.5, 15.75, 5.75], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable starboard front",
+      "from": [10.25, 8.3, 10.00901],
+      "to": [13.431981, 9.85, 11.6],
+      "rotation": {"axis": "y", "angle": 45, "origin": [10.25, 8.3, 11.6]},
+      "faces": {
+        "south": {"uv": [12.0, 4.5, 15.75, 5.75], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable side lug",
+      "from": [2.65, 8.05, 6.1],
+      "to": [3.75, 8.78, 7.9],
+      "faces": {
+        "north": {"uv": [12.0, 4.5, 15.75, 5.75], "texture": "#steel"},
+        "south": {"uv": [12.0, 4.5, 15.75, 5.75], "texture": "#steel"},
+        "west": {"uv": [12.0, 4.5, 15.75, 5.75], "texture": "#steel"},
+        "east": {"uv": [12.0, 4.5, 15.75, 5.75], "texture": "#steel"},
+        "up": {"uv": [12.0, 4.5, 15.75, 5.75], "texture": "#steel"},
+        "down": {"uv": [12.0, 4.5, 15.75, 5.75], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Gunhouse",
+      "from": [2.4, 9.85, 2],
+      "to": [13.6, 16.75, 9.1],
+      "faces": {
+        "north": {"texture": "#steel", "uv": [0.0, 10.75, 7.0, 15.0]},
+        "west": {"texture": "#steel", "uv": [7.25, 0.0, 11.75, 4.25]},
+        "east": {"texture": "#steel", "uv": [7.25, 4.5, 11.75, 8.75]},
+        "up": {"texture": "#steel", "uv": [0.0, 0.0, 7.0, 4.5]}
+      }
+    },
+    {
+      "name": "Gunhouse underside",
+      "from": [2.4, 9.85, 2],
+      "to": [13.6, 16.75, 12.05],
+      "faces": {
+        "down": {"uv": [0.0, 15.25, 1.25, 16.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Sloping side cheeks",
+      "from": [2.4, 9.85, 9.1],
+      "to": [13.6, 16.75, 12.05],
+      "faces": {
+        "west": {"uv": [12.0, 0.0, 14.0, 4.25], "texture": "#steel"},
+        "east": {"uv": [14.0, 0.0, 16.0, 4.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Sloping roof",
+      "from": [2.4001, 15.35, 9.1],
+      "to": [13.5999, 16.75, 12.293057],
+      "rotation": {"axis": "x", "angle": 22.5, "origin": [8, 16.75, 9.1]},
+      "faces": {
+        "up": {"uv": [0.0, 8.5, 7.0, 10.5], "texture": "#steel"},
+        "west": {"texture": "#steel", "uv": [12.5, 7.5, 13.0, 8.0]},
+        "east": {"texture": "#steel", "uv": [12.5, 7.5, 13.0, 8.0]}
+      }
+    },
+    {
+      "name": "Front armor and twin embrasures",
+      "from": [2.4, 9.85, 11.85],
+      "to": [13.6, 15.52807, 12.05],
+      "faces": {
+        "south": {"uv": [0.0, 4.75, 7.0, 8.25], "texture": "#steel"},
+        "west": {"texture": "#steel", "uv": [12.5, 7.5, 13.0, 8.0]},
+        "east": {"texture": "#steel", "uv": [12.5, 7.5, 13.0, 8.0]}
+      }
+    },
+    {
+      "name": "Roof periscope foot",
+      "from": [4.2, 16.75, 3.55],
+      "to": [4.95, 16.9, 4.3],
+      "faces": {
+        "north": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"},
+        "south": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"},
+        "west": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"},
+        "east": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"},
+        "up": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"},
+        "down": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Roof periscope",
+      "from": [4.35, 16.9, 3.7],
+      "to": [4.8, 18, 4.15],
+      "faces": {
+        "north": {"uv": [12.5, 11.75, 13.5, 13.0], "texture": "#steel"},
+        "south": {"uv": [12.5, 11.75, 13.5, 13.0], "texture": "#steel"},
+        "west": {"uv": [12.5, 11.75, 13.5, 13.0], "texture": "#steel"},
+        "east": {"uv": [12.5, 11.75, 13.5, 13.0], "texture": "#steel"},
+        "up": {"uv": [12.5, 11.75, 13.5, 13.0], "texture": "#steel"},
+        "down": {"uv": [12.5, 11.75, 13.5, 13.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Port embrasure brow",
+      "from": [4.82, 14.78, 12.05],
+      "to": [6.48, 15, 12.45],
+      "faces": {
+        "south": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"},
+        "up": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"},
+        "west": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"},
+        "east": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"},
+        "down": {"uv": [0.0, 15.25, 1.25, 16.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Port barrel root",
+      "from": [5.01, 12.41, 12.05],
+      "to": [6.29, 13.69, 13.25],
+      "faces": {
+        "south": {"uv": [12.5, 10.25, 14.75, 11.5], "texture": "#steel"},
+        "west": {"uv": [12.5, 10.25, 14.75, 11.5], "texture": "#steel"},
+        "east": {"uv": [12.5, 10.25, 14.75, 11.5], "texture": "#steel"},
+        "up": {"uv": [12.5, 10.25, 14.75, 11.5], "texture": "#steel"},
+        "down": {"uv": [14.0, 8.75, 14.75, 10.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Port barrel",
+      "from": [5.22, 12.62, 13.25],
+      "to": [6.08, 13.48, 26],
+      "faces": {
+        "south": {"uv": [12.5, 8.75, 13.75, 10.0], "texture": "#muzzle"},
+        "west": {"uv": [7.25, 14.25, 14.5, 15.0], "texture": "#steel"},
+        "east": {"uv": [7.25, 14.25, 14.5, 15.0], "texture": "#steel"},
+        "up": {"uv": [15.0, 8.5, 15.75, 15.75], "texture": "#steel"},
+        "down": {"uv": [14.0, 8.75, 14.75, 10.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Starboard embrasure brow",
+      "from": [9.52, 14.78, 12.05],
+      "to": [11.18, 15, 12.45],
+      "faces": {
+        "south": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"},
+        "up": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"},
+        "west": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"},
+        "east": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"},
+        "down": {"uv": [0.0, 15.25, 1.25, 16.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Starboard barrel root",
+      "from": [9.71, 12.41, 12.05],
+      "to": [10.99, 13.69, 13.25],
+      "faces": {
+        "south": {"uv": [12.5, 10.25, 14.75, 11.5], "texture": "#steel"},
+        "west": {"uv": [12.5, 10.25, 14.75, 11.5], "texture": "#steel"},
+        "east": {"uv": [12.5, 10.25, 14.75, 11.5], "texture": "#steel"},
+        "up": {"uv": [12.5, 10.25, 14.75, 11.5], "texture": "#steel"},
+        "down": {"uv": [14.0, 8.75, 14.75, 10.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Starboard barrel",
+      "from": [9.92, 12.62, 13.25],
+      "to": [10.78, 13.48, 26],
+      "faces": {
+        "south": {"uv": [12.5, 8.75, 13.75, 10.0], "texture": "#muzzle"},
+        "west": {"uv": [7.25, 14.25, 14.5, 15.0], "texture": "#steel"},
+        "east": {"uv": [7.25, 14.25, 14.5, 15.0], "texture": "#steel"},
+        "up": {"uv": [15.0, 8.5, 15.75, 15.75], "texture": "#steel"},
+        "down": {"uv": [14.0, 8.75, 14.75, 10.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Training flange cover center",
+      "from": [3.15, 7.85, 4.675],
+      "to": [12.85, 8.3, 9.525],
+      "faces": {
+        "up": {"uv": [7.25, 9.0, 12.25, 14.0], "texture": "#steel"},
+        "down": {"uv": [7.25, 9.0, 12.25, 14.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Training flange cover rear",
+      "from": [5.575, 7.85, 2.25],
+      "to": [10.425, 8.3, 4.675],
+      "faces": {
+        "up": {"uv": [7.25, 9.0, 12.25, 14.0], "texture": "#steel"},
+        "down": {"uv": [7.25, 9.0, 12.25, 14.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Training flange cover front",
+      "from": [5.575, 7.85, 9.525],
+      "to": [10.425, 8.3, 11.95],
+      "faces": {
+        "up": {"uv": [7.25, 9.0, 12.25, 14.0], "texture": "#steel"},
+        "down": {"uv": [7.25, 9.0, 12.25, 14.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Training flange cover corner 1",
+      "from": [10.425, 7.85, 2.25],
+      "to": [13.85446789, 8.3, 3.96473394],
+      "rotation": {"origin": [10.425, 7.85, 2.25], "axis": "y", "angle": -45},
+      "faces": {
+        "up": {"uv": [7.25, 9.0, 12.25, 14.0], "texture": "#steel"},
+        "down": {"uv": [7.25, 9.0, 12.25, 14.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Training flange cover corner 2",
+      "from": [10.425, 7.85, 10.23526606],
+      "to": [13.85446789, 8.3, 11.95],
+      "rotation": {"origin": [10.425, 7.85, 11.95], "axis": "y", "angle": 45},
+      "faces": {
+        "up": {"uv": [7.25, 9.0, 12.25, 14.0], "texture": "#steel"},
+        "down": {"uv": [7.25, 9.0, 12.25, 14.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Training flange cover corner 3",
+      "from": [3.15, 7.85, 7.81026606],
+      "to": [6.57946789, 8.3, 9.525],
+      "rotation": {"origin": [3.15, 7.85, 9.524999999999999], "axis": "y", "angle": -45},
+      "faces": {
+        "up": {"uv": [7.25, 9.0, 12.25, 14.0], "texture": "#steel"},
+        "down": {"uv": [7.25, 9.0, 12.25, 14.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Training flange cover corner 4",
+      "from": [3.15, 7.85, 4.675],
+      "to": [6.57946789, 8.3, 6.38973394],
+      "rotation": {"origin": [3.15, 7.85, 4.675], "axis": "y", "angle": 45},
+      "faces": {
+        "up": {"uv": [7.25, 9.0, 12.25, 14.0], "texture": "#steel"},
+        "down": {"uv": [7.25, 9.0, 12.25, 14.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable cover center",
+      "from": [3.5, 8.3, 4.85],
+      "to": [12.5, 9.85, 9.35],
+      "faces": {
+        "up": {"uv": [7.25, 9.0, 12.25, 14.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable cover rear",
+      "from": [5.75, 8.3, 2.6],
+      "to": [10.25, 9.85, 4.85],
+      "faces": {
+        "up": {"uv": [7.25, 9.0, 12.25, 14.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable cover front",
+      "from": [5.75, 8.3, 9.35],
+      "to": [10.25, 9.85, 11.6],
+      "faces": {
+        "up": {"uv": [7.25, 9.0, 12.25, 14.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable cover corner 1",
+      "from": [10.25, 8.3, 2.6],
+      "to": [13.43198052, 9.85, 4.19099026],
+      "rotation": {"origin": [10.25, 8.3, 2.6], "axis": "y", "angle": -45},
+      "faces": {
+        "up": {"uv": [7.25, 9.0, 12.25, 14.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable cover corner 2",
+      "from": [10.25, 8.3, 10.00900974],
+      "to": [13.43198052, 9.85, 11.6],
+      "rotation": {"origin": [10.25, 8.3, 11.6], "axis": "y", "angle": 45},
+      "faces": {
+        "up": {"uv": [7.25, 9.0, 12.25, 14.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable cover corner 3",
+      "from": [3.5, 8.3, 7.75900974],
+      "to": [6.68198052, 9.85, 9.35],
+      "rotation": {"origin": [3.5, 8.3, 9.35], "axis": "y", "angle": -45},
+      "faces": {
+        "up": {"uv": [7.25, 9.0, 12.25, 14.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable cover corner 4",
+      "from": [3.5, 8.3, 4.85],
+      "to": [6.68198052, 9.85, 6.44099026],
+      "rotation": {"origin": [3.5, 8.3, 4.85], "axis": "y", "angle": 45},
+      "faces": {
+        "up": {"uv": [7.25, 9.0, 12.25, 14.0], "texture": "#steel"}
+      }
+    }
+  ]
+}

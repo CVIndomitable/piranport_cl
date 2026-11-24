@@ -1,0 +1,463 @@
+{
+  "gui_light": "front",
+  "textures": {"particle": "piranport:item/italian_triple_320mm_gun_turret", "armor": "piranport:item/italian_triple_320mm_gun_turret", "muzzle": "piranport:item/italian_triple_320mm_gun_turret"},
+  "elements": [
+    {
+      "name": "Turntable flange middle",
+      "from": [0.8, 4.1, 3.03],
+      "to": [15.2, 6.18, 9.81],
+      "faces": {
+        "up": {"uv": [1.25, 0.0, 2.25, 1.0], "texture": "#armor"},
+        "down": {"uv": [6.25, 0.0, 7.25, 1.0], "texture": "#armor"},
+        "west": {"uv": [0.0, 7.75, 4.0, 9.5], "texture": "#armor"},
+        "east": {"uv": [0.0, 7.75, 4.0, 9.5], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Turntable flange north",
+      "from": [4.65, 4.1, -0.82],
+      "to": [11.35, 6.18, 3.03],
+      "faces": {
+        "up": {"uv": [1.25, 0.0, 2.25, 1.0], "texture": "#armor"},
+        "down": {"uv": [6.25, 0.0, 7.25, 1.0], "texture": "#armor"},
+        "north": {"uv": [0.0, 7.75, 4.0, 9.5], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Turntable flange port north bevel",
+      "from": [0.8, 4.1, 3.03],
+      "to": [6.244722215, 6.18, 5.752361108],
+      "rotation": {"axis": "y", "angle": 45, "origin": [0.8, 4.1, 3.03]},
+      "faces": {
+        "up": {"uv": [1.25, 0.0, 2.25, 1.0], "texture": "#armor"},
+        "down": {"uv": [6.25, 0.0, 7.25, 1.0], "texture": "#armor"},
+        "north": {"uv": [0.0, 7.75, 4.0, 9.5], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Turntable flange starboard north bevel",
+      "from": [11.35, 4.1, -0.82],
+      "to": [16.794722215, 6.18, 1.902361108],
+      "rotation": {"axis": "y", "angle": -45, "origin": [11.35, 4.1, -0.82]},
+      "faces": {
+        "up": {"uv": [1.25, 0.0, 2.25, 1.0], "texture": "#armor"},
+        "down": {"uv": [6.25, 0.0, 7.25, 1.0], "texture": "#armor"},
+        "north": {"uv": [0.0, 7.75, 4.0, 9.5], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Turntable flange south",
+      "from": [4.42, 4.1, 9.81],
+      "to": [11.58, 6.18, 13.43],
+      "faces": {
+        "up": {"uv": [1.25, 0.0, 2.25, 1.0], "texture": "#armor"},
+        "down": {"uv": [6.25, 0.0, 7.25, 1.0], "texture": "#armor"},
+        "south": {"uv": [0.0, 7.75, 4.0, 9.5], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Turntable flange port south bevel",
+      "from": [0.8, 4.1, 7.250273452],
+      "to": [5.919453096, 6.18, 9.81],
+      "rotation": {"axis": "y", "angle": -45, "origin": [0.8, 4.1, 9.81]},
+      "faces": {
+        "up": {"uv": [1.25, 0.0, 2.25, 1.0], "texture": "#armor"},
+        "down": {"uv": [6.25, 0.0, 7.25, 1.0], "texture": "#armor"},
+        "south": {"uv": [0.0, 7.75, 4.0, 9.5], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Turntable flange starboard south bevel",
+      "from": [11.58, 4.1, 10.870273452],
+      "to": [16.699453096, 6.18, 13.43],
+      "rotation": {"axis": "y", "angle": 45, "origin": [11.58, 4.1, 13.43]},
+      "faces": {
+        "up": {"uv": [1.25, 0.0, 2.25, 1.0], "texture": "#armor"},
+        "down": {"uv": [6.25, 0.0, 7.25, 1.0], "texture": "#armor"},
+        "south": {"uv": [0.0, 7.75, 4.0, 9.5], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Turntable ring middle",
+      "from": [1.45, 6.18, 3.39],
+      "to": [14.55, 8.75, 9.3],
+      "faces": {
+        "west": {"uv": [0.0, 5.5, 4.0, 7.5], "texture": "#armor"},
+        "east": {"uv": [0.0, 5.5, 4.0, 7.5], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Turntable ring north",
+      "from": [5.07, 6.18, -0.23],
+      "to": [10.93, 8.75, 3.39],
+      "faces": {
+        "north": {"uv": [0.0, 5.5, 4.0, 7.5], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Turntable ring port north bevel",
+      "from": [1.45, 6.18, 3.39],
+      "to": [6.569453096, 8.75, 5.949726548],
+      "rotation": {"axis": "y", "angle": 45, "origin": [1.45, 6.18, 3.39]},
+      "faces": {
+        "north": {"uv": [0.0, 5.5, 4.0, 7.5], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Turntable ring starboard north bevel",
+      "from": [10.93, 6.18, -0.23],
+      "to": [16.049453096, 8.75, 2.329726548],
+      "rotation": {"axis": "y", "angle": -45, "origin": [10.93, 6.18, -0.23]},
+      "faces": {
+        "north": {"uv": [0.0, 5.5, 4.0, 7.5], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Turntable ring south",
+      "from": [4.73, 6.18, 9.3],
+      "to": [11.27, 8.75, 12.58],
+      "faces": {
+        "south": {"uv": [0.0, 5.5, 4.0, 7.5], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Turntable ring port south bevel",
+      "from": [1.45, 6.18, 6.980689758],
+      "to": [6.088620485, 8.75, 9.3],
+      "rotation": {"axis": "y", "angle": -45, "origin": [1.45, 6.18, 9.3]},
+      "faces": {
+        "south": {"uv": [0.0, 5.5, 4.0, 7.5], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Turntable ring starboard south bevel",
+      "from": [11.27, 6.18, 10.260689758],
+      "to": [15.908620485, 8.75, 12.58],
+      "rotation": {"axis": "y", "angle": 45, "origin": [11.27, 6.18, 12.58]},
+      "faces": {
+        "south": {"uv": [0.0, 5.5, 4.0, 7.5], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Port service tab",
+      "from": [0.65, 6.4, 3.73],
+      "to": [1.9, 6.91, 4.53],
+      "faces": {
+        "north": {"uv": [9.0, 5.5, 11.0, 7.25], "texture": "#armor"},
+        "south": {"uv": [9.0, 5.5, 11.0, 7.25], "texture": "#armor"},
+        "west": {"uv": [9.0, 5.5, 11.0, 7.25], "texture": "#armor"},
+        "east": {"uv": [9.0, 5.5, 11.0, 7.25], "texture": "#armor"},
+        "up": {"uv": [9.0, 5.5, 11.0, 7.25], "texture": "#armor"},
+        "down": {"uv": [9.0, 5.5, 11.0, 7.25], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Aft armor middle",
+      "from": [0.45, 8.75, 2.2],
+      "to": [15.55, 14.9, 11.6],
+      "faces": {
+        "down": {"uv": [6.25, 0.0, 7.25, 1.0], "texture": "#armor"},
+        "west": {"uv": [1.25, 0.0, 2.25, 1.0], "texture": "#armor"},
+        "east": {"uv": [1.25, 0.0, 2.25, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Aft armor north",
+      "from": [3.9, 8.75, -1.25],
+      "to": [12.1, 14.9, 2.2],
+      "faces": {
+        "down": {"uv": [6.25, 0.0, 7.25, 1.0], "texture": "#armor"},
+        "north": {"uv": [5.0, 0.0, 6.0, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Aft armor port north bevel",
+      "from": [0.45, 8.75, 2.2],
+      "to": [5.32903679, 14.9, 4.639518395],
+      "rotation": {"axis": "y", "angle": 45, "origin": [0.45, 8.75, 2.2]},
+      "faces": {
+        "down": {"uv": [6.25, 0.0, 7.25, 1.0], "texture": "#armor"},
+        "north": {"uv": [2.5, 0.0, 3.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Aft armor starboard north bevel",
+      "from": [12.1, 8.75, -1.25],
+      "to": [16.97903679, 14.9, 1.189518395],
+      "rotation": {"axis": "y", "angle": -45, "origin": [12.1, 8.75, -1.25]},
+      "faces": {
+        "down": {"uv": [6.25, 0.0, 7.25, 1.0], "texture": "#armor"},
+        "north": {"uv": [2.5, 0.0, 3.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Front armor middle",
+      "from": [0.45, 8.75, 11.6],
+      "to": [15.55, 14.9, 12.65],
+      "faces": {
+        "up": {"uv": [0.0, 0.0, 1.0, 1.0], "texture": "#armor"},
+        "down": {"uv": [6.25, 0.0, 7.25, 1.0], "texture": "#armor"},
+        "west": {"uv": [1.25, 0.0, 2.25, 1.0], "texture": "#armor"},
+        "east": {"uv": [1.25, 0.0, 2.25, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Front armor south",
+      "from": [2.8, 8.75, 12.65],
+      "to": [13.2, 14.9, 15.0],
+      "faces": {
+        "up": {"uv": [0.0, 0.0, 1.0, 1.0], "texture": "#armor"},
+        "down": {"uv": [6.25, 0.0, 7.25, 1.0], "texture": "#armor"},
+        "south": {"uv": [3.75, 0.0, 4.75, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Front armor port south bevel",
+      "from": [0.45, 8.75, 10.988299064],
+      "to": [3.773401872, 14.9, 12.65],
+      "rotation": {"axis": "y", "angle": -45, "origin": [0.45, 8.75, 12.65]},
+      "faces": {
+        "up": {"uv": [0.0, 0.0, 1.0, 1.0], "texture": "#armor"},
+        "down": {"uv": [6.25, 0.0, 7.25, 1.0], "texture": "#armor"},
+        "south": {"uv": [2.5, 0.0, 3.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Front armor starboard south bevel",
+      "from": [13.2, 8.75, 13.338299064],
+      "to": [16.523401872, 14.9, 15.0],
+      "rotation": {"axis": "y", "angle": 45, "origin": [13.2, 8.75, 15.0]},
+      "faces": {
+        "up": {"uv": [0.0, 0.0, 1.0, 1.0], "texture": "#armor"},
+        "down": {"uv": [6.25, 0.0, 7.25, 1.0], "texture": "#armor"},
+        "south": {"uv": [2.5, 0.0, 3.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Aft crown middle",
+      "from": [0.45, 14.9, 2.2],
+      "to": [15.55, 17.05, 6.409440841],
+      "faces": {
+        "up": {"uv": [0.0, 1.25, 8.0, 5.0], "texture": "#armor"},
+        "west": {"uv": [1.25, 0.0, 2.25, 1.0], "texture": "#armor"},
+        "east": {"uv": [1.25, 0.0, 2.25, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Aft crown north",
+      "from": [3.9, 14.9, -1.25],
+      "to": [12.1, 17.05, 2.2],
+      "faces": {
+        "up": {"uv": [0.0, 0.0, 1.0, 1.0], "texture": "#armor"},
+        "north": {"uv": [5.0, 0.0, 6.0, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Aft crown port north bevel",
+      "from": [0.45, 14.9, 2.2],
+      "to": [5.32903679, 17.05, 4.639518395],
+      "rotation": {"axis": "y", "angle": 45, "origin": [0.45, 14.9, 2.2]},
+      "faces": {
+        "up": {"uv": [0.0, 0.0, 1.0, 1.0], "texture": "#armor"},
+        "north": {"uv": [2.5, 0.0, 3.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Aft crown starboard north bevel",
+      "from": [12.1, 14.9, -1.25],
+      "to": [16.97903679, 17.05, 1.189518395],
+      "rotation": {"axis": "y", "angle": -45, "origin": [12.1, 14.9, -1.25]},
+      "faces": {
+        "up": {"uv": [0.0, 0.0, 1.0, 1.0], "texture": "#armor"},
+        "north": {"uv": [2.5, 0.0, 3.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Forward crown",
+      "from": [0.45, 12.52, 5.981779251],
+      "to": [15.55, 14.9, 11.6],
+      "rotation": {"axis": "x", "angle": 22.5, "origin": [8, 14.9, 11.6]},
+      "faces": {
+        "up": {"uv": [0.0, 1.25, 8.0, 5.0], "texture": "#armor"},
+        "west": {"uv": [1.25, 0.0, 2.25, 1.0], "texture": "#armor"},
+        "east": {"uv": [1.25, 0.0, 2.25, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Port sight tab",
+      "from": [0, 12.22, 1.9],
+      "to": [0.66, 13.28, 4.16],
+      "faces": {
+        "north": {"uv": [5.0, 0.0, 6.0, 1.0], "texture": "#armor"},
+        "south": {"uv": [9.0, 5.5, 11.0, 7.25], "texture": "#armor"},
+        "west": {"uv": [9.0, 5.5, 11.0, 7.25], "texture": "#armor"},
+        "east": {"uv": [9.0, 5.5, 11.0, 7.25], "texture": "#armor"},
+        "up": {"uv": [0.0, 0.0, 1.0, 1.0], "texture": "#armor"},
+        "down": {"uv": [6.25, 0.0, 7.25, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Starboard sight tab",
+      "from": [15.34, 12.22, 1.9],
+      "to": [16, 13.28, 4.16],
+      "faces": {
+        "north": {"uv": [5.0, 0.0, 6.0, 1.0], "texture": "#armor"},
+        "south": {"uv": [9.0, 5.5, 11.0, 7.25], "texture": "#armor"},
+        "west": {"uv": [9.0, 5.5, 11.0, 7.25], "texture": "#armor"},
+        "east": {"uv": [9.0, 5.5, 11.0, 7.25], "texture": "#armor"},
+        "up": {"uv": [0.0, 0.0, 1.0, 1.0], "texture": "#armor"},
+        "down": {"uv": [6.25, 0.0, 7.25, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Port mantlet",
+      "from": [3.09, 10.75, 13.74],
+      "to": [5.59, 15.04, 15.65],
+      "rotation": {"axis": "x", "angle": -22.5, "origin": [4.34, 13.21, 14.8]},
+      "faces": {
+        "south": {"uv": [4.5, 5.5, 7.5, 8.75], "texture": "#armor"},
+        "north": {"uv": [7.75, 5.5, 8.75, 6.5], "texture": "#armor"},
+        "west": {"uv": [7.75, 5.5, 8.75, 6.5], "texture": "#armor"},
+        "east": {"uv": [7.75, 5.5, 8.75, 6.5], "texture": "#armor"},
+        "down": {"uv": [7.75, 5.5, 8.75, 6.5], "texture": "#armor"},
+        "up": {"uv": [7.75, 5.5, 8.75, 6.5], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Port barrel root",
+      "from": [3.54, 11.85, 15.3],
+      "to": [5.14, 13.45, 17.55],
+      "faces": {
+        "west": {"uv": [0.0, 10.75, 7.0, 12.25], "texture": "#armor"},
+        "east": {"uv": [0.0, 10.75, 7.0, 12.25], "texture": "#armor"},
+        "up": {"uv": [0.0, 12.75, 7.0, 14.0], "texture": "#armor"},
+        "down": {"uv": [0.0, 14.25, 1.0, 15.25], "texture": "#armor"},
+        "south": {"uv": [0.0, 14.25, 1.0, 15.25], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Port barrel joint",
+      "from": [3.655, 11.965, 17.55],
+      "to": [5.025, 13.335, 19.12],
+      "faces": {
+        "west": {"uv": [7.5, 10.75, 9.5, 12.25], "texture": "#armor"},
+        "east": {"uv": [7.5, 10.75, 9.5, 12.25], "texture": "#armor"},
+        "up": {"uv": [0.0, 12.75, 7.0, 14.0], "texture": "#armor"},
+        "down": {"uv": [0.0, 14.25, 1.0, 15.25], "texture": "#armor"},
+        "south": {"uv": [0.0, 14.25, 1.0, 15.25], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Port barrel",
+      "from": [3.775, 12.085, 19.12],
+      "to": [4.905, 13.215, 31.25],
+      "faces": {
+        "west": {"uv": [0.0, 10.75, 7.0, 12.25], "texture": "#armor"},
+        "east": {"uv": [0.0, 10.75, 7.0, 12.25], "texture": "#armor"},
+        "up": {"uv": [0.0, 12.75, 7.0, 14.0], "texture": "#armor"},
+        "down": {"uv": [0.0, 14.25, 1.0, 15.25], "texture": "#armor"},
+        "south": {"uv": [12.5, 11.25, 13.75, 12.5], "texture": "#muzzle"}
+      }
+    },
+    {
+      "name": "Center mantlet",
+      "from": [6.75, 10.75, 13.74],
+      "to": [9.25, 15.04, 15.65],
+      "rotation": {"axis": "x", "angle": -22.5, "origin": [8, 13.21, 14.8]},
+      "faces": {
+        "south": {"uv": [4.5, 5.5, 7.5, 8.75], "texture": "#armor"},
+        "north": {"uv": [7.75, 5.5, 8.75, 6.5], "texture": "#armor"},
+        "west": {"uv": [7.75, 5.5, 8.75, 6.5], "texture": "#armor"},
+        "east": {"uv": [7.75, 5.5, 8.75, 6.5], "texture": "#armor"},
+        "down": {"uv": [7.75, 5.5, 8.75, 6.5], "texture": "#armor"},
+        "up": {"uv": [7.75, 5.5, 8.75, 6.5], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Center barrel root",
+      "from": [7.2, 11.85, 15.3],
+      "to": [8.8, 13.45, 17.55],
+      "faces": {
+        "west": {"uv": [0.0, 10.75, 7.0, 12.25], "texture": "#armor"},
+        "east": {"uv": [0.0, 10.75, 7.0, 12.25], "texture": "#armor"},
+        "up": {"uv": [0.0, 12.75, 7.0, 14.0], "texture": "#armor"},
+        "down": {"uv": [0.0, 14.25, 1.0, 15.25], "texture": "#armor"},
+        "south": {"uv": [0.0, 14.25, 1.0, 15.25], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Center barrel joint",
+      "from": [7.315, 11.965, 17.55],
+      "to": [8.685, 13.335, 19.12],
+      "faces": {
+        "west": {"uv": [7.5, 10.75, 9.5, 12.25], "texture": "#armor"},
+        "east": {"uv": [7.5, 10.75, 9.5, 12.25], "texture": "#armor"},
+        "up": {"uv": [0.0, 12.75, 7.0, 14.0], "texture": "#armor"},
+        "down": {"uv": [0.0, 14.25, 1.0, 15.25], "texture": "#armor"},
+        "south": {"uv": [0.0, 14.25, 1.0, 15.25], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Center barrel",
+      "from": [7.435, 12.085, 19.12],
+      "to": [8.565, 13.215, 31.25],
+      "faces": {
+        "west": {"uv": [0.0, 10.75, 7.0, 12.25], "texture": "#armor"},
+        "east": {"uv": [0.0, 10.75, 7.0, 12.25], "texture": "#armor"},
+        "up": {"uv": [0.0, 12.75, 7.0, 14.0], "texture": "#armor"},
+        "down": {"uv": [0.0, 14.25, 1.0, 15.25], "texture": "#armor"},
+        "south": {"uv": [12.5, 11.25, 13.75, 12.5], "texture": "#muzzle"}
+      }
+    },
+    {
+      "name": "Starboard mantlet",
+      "from": [10.41, 10.75, 13.74],
+      "to": [12.91, 15.04, 15.65],
+      "rotation": {"axis": "x", "angle": -22.5, "origin": [11.66, 13.21, 14.8]},
+      "faces": {
+        "south": {"uv": [4.5, 5.5, 7.5, 8.75], "texture": "#armor"},
+        "north": {"uv": [7.75, 5.5, 8.75, 6.5], "texture": "#armor"},
+        "west": {"uv": [7.75, 5.5, 8.75, 6.5], "texture": "#armor"},
+        "east": {"uv": [7.75, 5.5, 8.75, 6.5], "texture": "#armor"},
+        "down": {"uv": [7.75, 5.5, 8.75, 6.5], "texture": "#armor"},
+        "up": {"uv": [7.75, 5.5, 8.75, 6.5], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Starboard barrel root",
+      "from": [10.86, 11.85, 15.3],
+      "to": [12.46, 13.45, 17.55],
+      "faces": {
+        "west": {"uv": [0.0, 10.75, 7.0, 12.25], "texture": "#armor"},
+        "east": {"uv": [0.0, 10.75, 7.0, 12.25], "texture": "#armor"},
+        "up": {"uv": [0.0, 12.75, 7.0, 14.0], "texture": "#armor"},
+        "down": {"uv": [0.0, 14.25, 1.0, 15.25], "texture": "#armor"},
+        "south": {"uv": [0.0, 14.25, 1.0, 15.25], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Starboard barrel joint",
+      "from": [10.975, 11.965, 17.55],
+      "to": [12.345, 13.335, 19.12],
+      "faces": {
+        "west": {"uv": [7.5, 10.75, 9.5, 12.25], "texture": "#armor"},
+        "east": {"uv": [7.5, 10.75, 9.5, 12.25], "texture": "#armor"},
+        "up": {"uv": [0.0, 12.75, 7.0, 14.0], "texture": "#armor"},
+        "down": {"uv": [0.0, 14.25, 1.0, 15.25], "texture": "#armor"},
+        "south": {"uv": [0.0, 14.25, 1.0, 15.25], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Starboard barrel",
+      "from": [11.095, 12.085, 19.12],
+      "to": [12.225, 13.215, 31.25],
+      "faces": {
+        "west": {"uv": [0.0, 10.75, 7.0, 12.25], "texture": "#armor"},
+        "east": {"uv": [0.0, 10.75, 7.0, 12.25], "texture": "#armor"},
+        "up": {"uv": [0.0, 12.75, 7.0, 14.0], "texture": "#armor"},
+        "down": {"uv": [0.0, 14.25, 1.0, 15.25], "texture": "#armor"},
+        "south": {"uv": [12.5, 11.25, 13.75, 12.5], "texture": "#muzzle"}
+      }
+    }
+  ]
+}

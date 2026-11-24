@@ -1,0 +1,142 @@
+{
+  "textures": {"particle": "piranport:item/japanese_127mm_twin_gun_armor", "steel": "piranport:item/japanese_127mm_twin_gun_armor", "muzzle": "piranport:item/japanese_127mm_twin_gun_armor"},
+  "elements": [
+    {
+      "name": "training ring",
+      "from": [2, 8, 1],
+      "to": [14, 10, 13],
+      "faces": {
+        "north": {"uv": [0.0, 0.0, 3.0, 0.5], "texture": "#steel"},
+        "south": {"uv": [0.0, 0.0, 3.0, 0.5], "texture": "#steel"},
+        "west": {"uv": [0.0, 0.0, 3.0, 0.5], "texture": "#steel"},
+        "east": {"uv": [0.0, 0.0, 3.0, 0.5], "texture": "#steel"},
+        "down": {"uv": [3.0, 0.0, 6.0, 3.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "turret sides",
+      "from": [0, 10, 0],
+      "to": [16, 16, 12],
+      "faces": {
+        "north": {"uv": [6.0, 0.0, 10.0, 1.5], "texture": "#steel"},
+        "south": {"uv": [10.0, 0.0, 14.0, 1.5], "texture": "#steel"},
+        "west": {"uv": [0.0, 3.0, 3.0, 4.5], "texture": "#steel"},
+        "east": {"uv": [0.0, 3.0, 3.0, 4.5], "texture": "#steel"},
+        "up": {"uv": [3.0, 3.0, 7.0, 6.0], "texture": "#steel"},
+        "down": {"uv": [7.0, 3.0, 11.0, 6.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "front glacis",
+      "from": [1, 10, 12],
+      "to": [15, 16, 15],
+      "faces": {
+        "south": {"uv": [11.0, 3.0, 14.5, 4.5], "texture": "#steel"},
+        "west": {"uv": [14.5, 3.0, 15.25, 4.5], "texture": "#steel"},
+        "east": {"uv": [14.5, 3.0, 15.25, 4.5], "texture": "#steel"},
+        "up": {"uv": [0.0, 6.0, 3.5, 6.75], "texture": "#steel"},
+        "down": {"uv": [3.5, 6.0, 7.0, 6.75], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "armored roof",
+      "from": [0, 16, 0],
+      "to": [16, 19, 7],
+      "faces": {
+        "north": {"uv": [7.0, 6.0, 11.0, 6.75], "texture": "#steel"},
+        "south": {"uv": [11.0, 6.0, 15.0, 6.75], "texture": "#steel"},
+        "west": {"uv": [0.0, 6.75, 1.75, 7.5], "texture": "#steel"},
+        "east": {"uv": [0.0, 6.75, 1.75, 7.5], "texture": "#steel"},
+        "up": {"uv": [1.75, 6.75, 5.75, 8.5], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "port shoulder",
+      "from": [0, 16, 7],
+      "to": [3, 19, 13],
+      "faces": {
+        "south": {"uv": [5.75, 6.75, 6.5, 7.5], "texture": "#steel"},
+        "west": {"uv": [6.5, 6.75, 8.0, 7.5], "texture": "#steel"},
+        "east": {"uv": [6.5, 6.75, 8.0, 7.5], "texture": "#steel"},
+        "up": {"uv": [8.75, 6.75, 8.0, 8.25], "texture": "#steel"},
+        "down": {"uv": [8.75, 6.75, 9.5, 8.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "starboard shoulder",
+      "from": [13, 16, 7],
+      "to": [16, 19, 13],
+      "faces": {
+        "south": {"uv": [5.75, 6.75, 6.5, 7.5], "texture": "#steel"},
+        "west": {"uv": [6.5, 6.75, 8.0, 7.5], "texture": "#steel"},
+        "east": {"uv": [6.5, 6.75, 8.0, 7.5], "texture": "#steel"},
+        "up": {"uv": [8.0, 6.75, 8.75, 8.25], "texture": "#steel"},
+        "down": {"uv": [8.75, 6.75, 9.5, 8.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "center armor",
+      "from": [7, 16, 7],
+      "to": [9, 18, 13],
+      "faces": {
+        "south": {"uv": [9.5, 6.75, 10.0, 7.25], "texture": "#steel"},
+        "west": {"uv": [10.0, 6.75, 11.5, 7.25], "texture": "#steel"},
+        "east": {"uv": [10.0, 6.75, 11.5, 7.25], "texture": "#steel"},
+        "up": {"uv": [11.5, 6.75, 12.0, 8.25], "texture": "#steel"},
+        "down": {"uv": [12.0, 6.75, 12.5, 8.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "port canvas boot",
+      "from": [3, 15, 7],
+      "to": [7, 19, 16],
+      "rotation": {"origin": [5, 17, 9], "axis": "x", "angle": 22.5, "rescale": false},
+      "faces": {
+        "north": {"uv": [12.5, 6.75, 13.5, 7.75], "texture": "#steel"},
+        "south": {"uv": [12.5, 6.75, 13.5, 7.75], "texture": "#steel"},
+        "west": {"uv": [13.5, 6.75, 15.75, 7.75], "texture": "#steel"},
+        "east": {"uv": [13.5, 6.75, 15.75, 7.75], "texture": "#steel"},
+        "up": {"uv": [1.0, 8.5, 0.0, 10.75], "texture": "#steel"},
+        "down": {"uv": [1.0, 8.5, 2.0, 10.75], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "port barrel",
+      "from": [4, 15, 13],
+      "to": [6, 17, 32],
+      "faces": {
+        "south": {"uv": [2.0, 8.5, 2.5, 9.0], "texture": "#muzzle"},
+        "west": {"uv": [2.5, 8.5, 7.25, 9.0], "texture": "#steel"},
+        "east": {"uv": [2.5, 8.5, 7.25, 9.0], "texture": "#steel"},
+        "up": {"uv": [7.25, 8.5, 7.75, 13.25], "texture": "#steel"},
+        "down": {"uv": [7.75, 8.5, 8.25, 13.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "starboard canvas boot",
+      "from": [9, 15, 7],
+      "to": [13, 19, 16],
+      "rotation": {"origin": [11, 17, 9], "axis": "x", "angle": 22.5, "rescale": false},
+      "faces": {
+        "north": {"uv": [12.5, 6.75, 13.5, 7.75], "texture": "#steel"},
+        "south": {"uv": [12.5, 6.75, 13.5, 7.75], "texture": "#steel"},
+        "west": {"uv": [13.5, 6.75, 15.75, 7.75], "texture": "#steel"},
+        "east": {"uv": [13.5, 6.75, 15.75, 7.75], "texture": "#steel"},
+        "up": {"uv": [0.0, 8.5, 1.0, 10.75], "texture": "#steel"},
+        "down": {"uv": [1.0, 8.5, 2.0, 10.75], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "starboard barrel",
+      "from": [10, 15, 13],
+      "to": [12, 17, 32],
+      "faces": {
+        "south": {"uv": [2.0, 8.5, 2.5, 9.0], "texture": "#muzzle"},
+        "west": {"uv": [2.5, 8.5, 7.25, 9.0], "texture": "#steel"},
+        "east": {"uv": [2.5, 8.5, 7.25, 9.0], "texture": "#steel"},
+        "up": {"uv": [7.25, 8.5, 7.75, 13.25], "texture": "#steel"},
+        "down": {"uv": [7.75, 8.5, 8.25, 13.25], "texture": "#steel"}
+      }
+    }
+  ]
+}

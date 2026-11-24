@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/italian_triple_305mm_gun_held",
+  "textures": {
+    "muzzle": "piranport:item/italian_triple_305mm_gun_turret_loaded"
+  }
+}

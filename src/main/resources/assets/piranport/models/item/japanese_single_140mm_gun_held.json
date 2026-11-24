@@ -1,0 +1,493 @@
+{
+  "gui_light": "front",
+  "textures": {"particle": "piranport:item/japanese_single_140mm_gun_shield", "shield": "piranport:item/japanese_single_140mm_gun_shield", "muzzle": "piranport:item/japanese_single_140mm_gun_shield"},
+  "elements": [
+    {
+      "name": "Grip shoulder",
+      "from": [6.215, 8.105, 4.78],
+      "to": [9.785, 9.085, 8.28],
+      "faces": {
+        "north": {"uv": [10.75, 14.0, 12.25, 15.25], "texture": "#shield"},
+        "south": {"uv": [10.75, 14.0, 12.25, 15.25], "texture": "#shield"},
+        "west": {"uv": [10.75, 14.0, 12.25, 15.25], "texture": "#shield"},
+        "east": {"uv": [10.75, 14.0, 12.25, 15.25], "texture": "#shield"},
+        "up": {"uv": [10.75, 14.0, 12.25, 15.25], "texture": "#shield"},
+        "down": {"uv": [10.75, 14.0, 12.25, 15.25], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Hand grip",
+      "from": [6.845, 4.675, 5.375],
+      "to": [9.155, 8.14, 7.825],
+      "faces": {
+        "north": {"uv": [10.75, 14.0, 12.25, 15.25], "texture": "#shield"},
+        "south": {"uv": [10.75, 14.0, 12.25, 15.25], "texture": "#shield"},
+        "west": {"uv": [12.5, 14.0, 14.5, 15.75], "texture": "#shield"},
+        "east": {"uv": [12.5, 14.0, 14.5, 15.75], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Grip heel",
+      "from": [6.705, 4.675, 5.235],
+      "to": [9.295, 5.13, 7.965],
+      "faces": {
+        "north": {"uv": [9.5, 14.0, 10.5, 15.0], "texture": "#shield"},
+        "south": {"uv": [9.5, 14.0, 10.5, 15.0], "texture": "#shield"},
+        "west": {"uv": [9.5, 14.0, 10.5, 15.0], "texture": "#shield"},
+        "east": {"uv": [9.5, 14.0, 10.5, 15.0], "texture": "#shield"},
+        "up": {"uv": [10.75, 14.0, 12.25, 15.25], "texture": "#shield"},
+        "down": {"uv": [9.5, 14.0, 10.5, 15.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Shield rear",
+      "from": [2.4, 9.05, 1.7],
+      "to": [13.6, 16.225, 1.875],
+      "faces": {
+        "north": {"uv": [0.0, 11.75, 5.0, 15.75], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Port side",
+      "from": [2.4, 9.05, 1.7],
+      "to": [2.575, 16.225, 6.95],
+      "faces": {
+        "west": {"uv": [8.0, 0.0, 14.0, 5.25], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Starboard side",
+      "from": [13.425, 9.05, 1.7],
+      "to": [13.6, 16.225, 6.95],
+      "faces": {
+        "east": {"uv": [8.0, 5.5, 14.0, 10.75], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Face plate",
+      "from": [4.29, 9.05, 9.155],
+      "to": [11.71, 15.239172, 9.33],
+      "faces": {
+        "south": {"uv": [0.0, 7.0, 5.5, 11.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Flat roof",
+      "from": [2.4, 16.05, 1.7],
+      "to": [13.6, 16.225, 6.95],
+      "faces": {
+        "up": {"uv": [0.0, 0.0, 8.0, 4.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Shield floor",
+      "from": [2.4, 9.05, 1.7],
+      "to": [13.6, 9.225, 7.44],
+      "faces": {
+        "down": {"uv": [10.75, 14.0, 12.25, 15.25], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Forward floor",
+      "from": [4.29, 9.05, 7.44],
+      "to": [11.71, 9.225, 9.33],
+      "faces": {
+        "down": {"uv": [10.75, 14.0, 12.25, 15.25], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Hatch surround",
+      "from": [9.505, 16.225, 3.1],
+      "to": [12.06, 16.505, 5.515],
+      "faces": {
+        "north": {"uv": [9.5, 14.0, 10.5, 15.0], "texture": "#shield"},
+        "south": {"uv": [9.5, 14.0, 10.5, 15.0], "texture": "#shield"},
+        "west": {"uv": [9.5, 14.0, 10.5, 15.0], "texture": "#shield"},
+        "east": {"uv": [9.5, 14.0, 10.5, 15.0], "texture": "#shield"},
+        "up": {"uv": [9.5, 14.0, 10.5, 15.0], "texture": "#shield"},
+        "down": {"uv": [9.5, 14.0, 10.5, 15.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Raised roof hatch",
+      "from": [9.715, 16.505, 3.296],
+      "to": [11.85, 17.135, 5.319],
+      "faces": {
+        "north": {"uv": [14.75, 13.75, 16.0, 15.25], "texture": "#shield"},
+        "south": {"uv": [14.75, 13.75, 16.0, 15.25], "texture": "#shield"},
+        "west": {"uv": [14.75, 13.75, 16.0, 15.25], "texture": "#shield"},
+        "east": {"uv": [14.75, 13.75, 16.0, 15.25], "texture": "#shield"},
+        "up": {"uv": [14.75, 13.75, 16.0, 15.25], "texture": "#shield"},
+        "down": {"uv": [14.75, 13.75, 16.0, 15.25], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Mantlet frame",
+      "from": [6.215, 9.435, 9.281],
+      "to": [9.785, 12.795, 9.512],
+      "faces": {
+        "north": {"uv": [9.5, 14.0, 10.5, 15.0], "texture": "#shield"},
+        "south": {"uv": [9.5, 14.0, 10.5, 15.0], "texture": "#shield"},
+        "west": {"uv": [9.5, 14.0, 10.5, 15.0], "texture": "#shield"},
+        "east": {"uv": [9.5, 14.0, 10.5, 15.0], "texture": "#shield"},
+        "up": {"uv": [9.5, 14.0, 10.5, 15.0], "texture": "#shield"},
+        "down": {"uv": [9.5, 14.0, 10.5, 15.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Canvas boot",
+      "from": [6.46, 9.645, 9.512],
+      "to": [9.54, 12.585, 10.114],
+      "faces": {
+        "west": {"uv": [5.5, 7.0, 7.5, 9.25], "texture": "#shield"},
+        "east": {"uv": [5.5, 7.0, 7.5, 9.25], "texture": "#shield"},
+        "south": {"uv": [5.5, 7.0, 7.5, 9.25], "texture": "#shield"},
+        "up": {"uv": [5.5, 9.5, 7.5, 11.0], "texture": "#shield"},
+        "down": {"uv": [5.5, 7.0, 7.5, 9.25], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Canvas sleeve",
+      "from": [7.055, 10.03, 10.114],
+      "to": [8.945, 11.955, 10.8],
+      "faces": {
+        "west": {"uv": [5.5, 7.0, 7.5, 9.25], "texture": "#shield"},
+        "east": {"uv": [5.5, 7.0, 7.5, 9.25], "texture": "#shield"},
+        "south": {"uv": [5.5, 7.0, 7.5, 9.25], "texture": "#shield"},
+        "up": {"uv": [5.5, 9.5, 7.5, 11.0], "texture": "#shield"},
+        "down": {"uv": [5.5, 7.0, 7.5, 9.25], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Canvas neck",
+      "from": [7.335, 10.135, 10.8],
+      "to": [8.665, 11.465, 11.045],
+      "faces": {
+        "west": {"uv": [5.5, 7.0, 7.5, 9.25], "texture": "#shield"},
+        "east": {"uv": [5.5, 7.0, 7.5, 9.25], "texture": "#shield"},
+        "south": {"uv": [5.5, 7.0, 7.5, 9.25], "texture": "#shield"},
+        "up": {"uv": [5.5, 9.5, 7.5, 11.0], "texture": "#shield"},
+        "down": {"uv": [5.5, 7.0, 7.5, 9.25], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Barrel shoulder",
+      "from": [7.44, 10.24, 11.045],
+      "to": [8.56, 11.36, 14.475],
+      "faces": {
+        "south": {"uv": [6.0, 11.5, 7.0, 15.75], "texture": "#shield"},
+        "west": {"uv": [8.0, 10.75, 14.0, 11.5], "texture": "#shield"},
+        "east": {"uv": [8.0, 10.75, 14.0, 11.5], "texture": "#shield"},
+        "up": {"uv": [7.75, 12.75, 15.5, 13.5], "texture": "#shield"},
+        "down": {"uv": [7.75, 12.75, 15.5, 13.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Barrel",
+      "from": [7.566, 10.366, 14.475],
+      "to": [8.434, 11.234, 24.8],
+      "faces": {
+        "south": {"uv": [7.75, 14.0, 9.0, 15.25], "texture": "#muzzle"},
+        "west": {"uv": [8.0, 10.75, 14.0, 11.5], "texture": "#shield"},
+        "east": {"uv": [8.0, 10.75, 14.0, 11.5], "texture": "#shield"},
+        "up": {"uv": [7.75, 12.75, 15.5, 13.5], "texture": "#shield"},
+        "down": {"uv": [7.75, 12.75, 15.5, 13.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Shield floor port bevel",
+      "from": [2.4, 9.05, 6.10356818],
+      "to": [5.07286363, 9.225, 7.44],
+      "rotation": {"origin": [2.4, 9.05, 7.44], "axis": "y", "angle": -45},
+      "faces": {
+        "down": {"uv": [10.75, 14.0, 12.25, 15.25], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Shield floor starboard bevel",
+      "from": [11.71, 9.05, 7.99356818],
+      "to": [14.38286363, 9.225, 9.33],
+      "rotation": {"origin": [11.71, 9.05, 9.33], "axis": "y", "angle": 45},
+      "faces": {
+        "down": {"uv": [10.75, 14.0, 12.25, 15.25], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Rounded roof strip 1",
+      "from": [2.4, 16.07351768, 6.95],
+      "to": [13.6, 16.12351768, 7.44],
+      "faces": {
+        "up": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Roof step 1",
+      "from": [2.4, 16.12351768, 6.9],
+      "to": [13.6, 16.225, 6.95],
+      "faces": {
+        "south": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Forward straight side walls",
+      "from": [2.4, 9.05, 6.95],
+      "to": [13.6, 16.12351768, 7.44],
+      "faces": {
+        "west": {"texture": "#shield", "uv": [8.5, 0.0, 13.0, 5.25]},
+        "east": {"texture": "#shield", "uv": [8.5, 0.0, 13.0, 5.25]}
+      }
+    },
+    {
+      "name": "Rounded roof strip 2",
+      "from": [2.67, 15.91611652, 7.44],
+      "to": [13.33, 15.96611652, 7.71],
+      "faces": {
+        "up": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Roof step 2",
+      "from": [2.4, 15.96611652, 7.39],
+      "to": [13.6, 16.12351768, 7.44],
+      "faces": {
+        "south": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Port cheek 1",
+      "from": [2.4, 9.05, 7.24908117],
+      "to": [2.78183766, 15.96611652, 7.44],
+      "rotation": {"origin": [2.4, 9.05, 7.44], "axis": "y", "angle": -45},
+      "faces": {
+        "south": {"texture": "#shield", "uv": [8.5, 0.0, 13.0, 5.25]},
+        "up": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Starboard cheek 1",
+      "from": [13.33, 9.05, 7.51908117],
+      "to": [13.71183766, 15.96611652, 7.71],
+      "rotation": {"origin": [13.33, 9.05, 7.71], "axis": "y", "angle": 45},
+      "faces": {
+        "south": {"texture": "#shield", "uv": [8.5, 0.0, 13.0, 5.25]},
+        "up": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Rounded roof strip 3",
+      "from": [2.94, 15.80427886, 7.71],
+      "to": [13.06, 15.85427886, 7.98],
+      "faces": {
+        "up": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Roof step 3",
+      "from": [2.67, 15.85427886, 7.66],
+      "to": [13.33, 15.96611652, 7.71],
+      "faces": {
+        "south": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Port cheek 2",
+      "from": [2.67, 9.05, 7.51908117],
+      "to": [3.05183766, 15.85427886, 7.71],
+      "rotation": {"origin": [2.6699999999999995, 9.05, 7.71], "axis": "y", "angle": -45},
+      "faces": {
+        "south": {"texture": "#shield", "uv": [8.5, 0.0, 13.0, 5.25]},
+        "up": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Starboard cheek 2",
+      "from": [13.06, 9.05, 7.78908117],
+      "to": [13.44183766, 15.85427886, 7.98],
+      "rotation": {"origin": [13.059999999999999, 9.05, 7.98], "axis": "y", "angle": 45},
+      "faces": {
+        "south": {"texture": "#shield", "uv": [8.5, 0.0, 13.0, 5.25]},
+        "up": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Rounded roof strip 4",
+      "from": [3.21, 15.6924412, 7.98],
+      "to": [12.79, 15.7424412, 8.25],
+      "faces": {
+        "up": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Roof step 4",
+      "from": [2.94, 15.7424412, 7.93],
+      "to": [13.06, 15.85427886, 7.98],
+      "faces": {
+        "south": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Port cheek 3",
+      "from": [2.94, 9.05, 7.78908117],
+      "to": [3.32183766, 15.7424412, 7.98],
+      "rotation": {"origin": [2.94, 9.05, 7.98], "axis": "y", "angle": -45},
+      "faces": {
+        "south": {"texture": "#shield", "uv": [8.5, 0.0, 13.0, 5.25]},
+        "up": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Starboard cheek 3",
+      "from": [12.79, 9.05, 8.05908117],
+      "to": [13.17183766, 15.7424412, 8.25],
+      "rotation": {"origin": [12.79, 9.05, 8.25], "axis": "y", "angle": 45},
+      "faces": {
+        "south": {"texture": "#shield", "uv": [8.5, 0.0, 13.0, 5.25]},
+        "up": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Rounded roof strip 5",
+      "from": [3.48, 15.58060354, 8.25],
+      "to": [12.52, 15.63060354, 8.52],
+      "faces": {
+        "up": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Roof step 5",
+      "from": [3.21, 15.63060354, 8.2],
+      "to": [12.79, 15.7424412, 8.25],
+      "faces": {
+        "south": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Port cheek 4",
+      "from": [3.21, 9.05, 8.05908117],
+      "to": [3.59183766, 15.63060354, 8.25],
+      "rotation": {"origin": [3.2099999999999995, 9.05, 8.25], "axis": "y", "angle": -45},
+      "faces": {
+        "south": {"texture": "#shield", "uv": [8.5, 0.0, 13.0, 5.25]},
+        "up": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Starboard cheek 4",
+      "from": [12.52, 9.05, 8.32908117],
+      "to": [12.90183766, 15.63060354, 8.52],
+      "rotation": {"origin": [12.52, 9.05, 8.52], "axis": "y", "angle": 45},
+      "faces": {
+        "south": {"texture": "#shield", "uv": [8.5, 0.0, 13.0, 5.25]},
+        "up": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Rounded roof strip 6",
+      "from": [3.75, 15.46876588, 8.52],
+      "to": [12.25, 15.51876588, 8.79],
+      "faces": {
+        "up": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Roof step 6",
+      "from": [3.48, 15.51876588, 8.47],
+      "to": [12.52, 15.63060354, 8.52],
+      "faces": {
+        "south": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Port cheek 5",
+      "from": [3.48, 9.05, 8.32908117],
+      "to": [3.86183766, 15.51876588, 8.52],
+      "rotation": {"origin": [3.479999999999999, 9.05, 8.52], "axis": "y", "angle": -45},
+      "faces": {
+        "south": {"texture": "#shield", "uv": [8.5, 0.0, 13.0, 5.25]},
+        "up": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Starboard cheek 5",
+      "from": [12.25, 9.05, 8.59908117],
+      "to": [12.63183766, 15.51876588, 8.79],
+      "rotation": {"origin": [12.25, 9.05, 8.790000000000001], "axis": "y", "angle": 45},
+      "faces": {
+        "south": {"texture": "#shield", "uv": [8.5, 0.0, 13.0, 5.25]},
+        "up": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Rounded roof strip 7",
+      "from": [4.02, 15.35692821, 8.79],
+      "to": [11.98, 15.40692821, 9.06],
+      "faces": {
+        "up": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Roof step 7",
+      "from": [3.75, 15.40692821, 8.74],
+      "to": [12.25, 15.51876588, 8.79],
+      "faces": {
+        "south": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Port cheek 6",
+      "from": [3.75, 9.05, 8.59908117],
+      "to": [4.13183766, 15.40692821, 8.79],
+      "rotation": {"origin": [3.7500000000000004, 9.05, 8.790000000000001], "axis": "y", "angle": -45},
+      "faces": {
+        "south": {"texture": "#shield", "uv": [8.5, 0.0, 13.0, 5.25]},
+        "up": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Starboard cheek 6",
+      "from": [11.98, 9.05, 8.86908117],
+      "to": [12.36183766, 15.40692821, 9.06],
+      "rotation": {"origin": [11.98, 9.05, 9.06], "axis": "y", "angle": 45},
+      "faces": {
+        "south": {"texture": "#shield", "uv": [8.5, 0.0, 13.0, 5.25]},
+        "up": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Rounded roof strip 8",
+      "from": [4.29, 15.189172, 9.06],
+      "to": [11.71, 15.239172, 9.33],
+      "faces": {
+        "up": {"texture": "#shield", "uv": [3.0, 6.5, 5.0, 6.75]}
+      }
+    },
+    {
+      "name": "Roof step 8",
+      "from": [4.02, 15.239172, 9.01],
+      "to": [11.98, 15.40692821, 9.06],
+      "faces": {
+        "south": {"texture": "#shield", "uv": [3.0, 2.0, 5.0, 3.0]}
+      }
+    },
+    {
+      "name": "Port cheek 7",
+      "from": [4.02, 9.05, 8.86908117],
+      "to": [4.40183766, 15.239172, 9.06],
+      "rotation": {"origin": [4.02, 9.05, 9.06], "axis": "y", "angle": -45},
+      "faces": {
+        "south": {"texture": "#shield", "uv": [8.5, 0.0, 13.0, 5.25]},
+        "up": {"texture": "#shield", "uv": [3.0, 6.5, 5.0, 6.75]}
+      }
+    },
+    {
+      "name": "Starboard cheek 7",
+      "from": [11.71, 9.05, 9.13908117],
+      "to": [12.09183766, 15.239172, 9.33],
+      "rotation": {"origin": [11.71, 9.05, 9.33], "axis": "y", "angle": 45},
+      "faces": {
+        "south": {"texture": "#shield", "uv": [8.5, 0.0, 13.0, 5.25]},
+        "up": {"texture": "#shield", "uv": [3.0, 6.5, 5.0, 6.75]}
+      }
+    }
+  ]
+}

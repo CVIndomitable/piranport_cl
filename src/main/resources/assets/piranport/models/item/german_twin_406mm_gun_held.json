@@ -1,0 +1,283 @@
+{
+  "gui_light": "front",
+  "textures": {"particle": "piranport:item/german_twin_406mm_gun_turret", "armor": "piranport:item/german_twin_406mm_gun_turret", "muzzle": "piranport:item/german_twin_406mm_gun_turret"},
+  "elements": [
+    {
+      "name": "Grip collar",
+      "from": [5.05, 6.6, 3.9],
+      "to": [10.95, 8.2, 9.15],
+      "faces": {
+        "north": {"uv": [5.0, 0.0, 6.0, 1.0], "texture": "#armor"},
+        "south": {"uv": [5.0, 0.0, 6.0, 1.0], "texture": "#armor"},
+        "west": {"uv": [5.0, 0.0, 6.0, 1.0], "texture": "#armor"},
+        "east": {"uv": [5.0, 0.0, 6.0, 1.0], "texture": "#armor"},
+        "down": {"uv": [5.0, 0.0, 6.0, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Grip",
+      "from": [6.02, 0.45, 4.75],
+      "to": [9.98, 6.6, 8.34],
+      "faces": {
+        "north": {"uv": [12.5, 1.5, 16.0, 5.25], "texture": "#armor"},
+        "south": {"uv": [12.5, 1.5, 16.0, 5.25], "texture": "#armor"},
+        "west": {"uv": [12.5, 1.5, 16.0, 5.25], "texture": "#armor"},
+        "east": {"uv": [12.5, 1.5, 16.0, 5.25], "texture": "#armor"},
+        "down": {"uv": [5.0, 0.0, 6.0, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Lower casemate center",
+      "from": [1.46, 8.2, 0.45],
+      "to": [14.54, 12.17685066, 13.65],
+      "faces": {
+        "down": {"uv": [5.0, 0.0, 6.0, 1.0], "texture": "#armor"},
+        "west": {"uv": [0.0, 9.75, 7.0, 11.5], "texture": "#armor"},
+        "east": {"uv": [0.0, 9.75, 7.0, 11.5], "texture": "#armor"},
+        "south": {"uv": [0.0, 7.5, 7.0, 9.25], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Lower casemate north",
+      "from": [3.16, 8.2, -1.25],
+      "to": [12.84, 12.17685066, 0.45],
+      "faces": {
+        "down": {"uv": [5.0, 0.0, 6.0, 1.0], "texture": "#armor"},
+        "north": {"uv": [3.75, 0.0, 4.75, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Lower casemate north port bevel",
+      "from": [1.46, 8.2, 0.45],
+      "to": [3.864163056, 12.17685066, 1.652081528],
+      "rotation": {"axis": "y", "angle": 45, "origin": [1.46, 8.2, 0.45]},
+      "faces": {
+        "down": {"uv": [5.0, 0.0, 6.0, 1.0], "texture": "#armor"},
+        "north": {"uv": [2.5, 0.0, 3.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Lower casemate north starboard bevel",
+      "from": [12.84, 8.2, -1.25],
+      "to": [15.244163056, 12.17685066, -0.047918472],
+      "rotation": {"axis": "y", "angle": -45, "origin": [12.84, 8.2, -1.25]},
+      "faces": {
+        "down": {"uv": [5.0, 0.0, 6.0, 1.0], "texture": "#armor"},
+        "north": {"uv": [0.0, 9.75, 7.0, 11.5], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Aft armor center",
+      "from": [1.46, 12.17685066, 0.45],
+      "to": [14.54, 17.8, 4.6],
+      "faces": {
+        "up": {"uv": [0.0, 0.0, 1.0, 1.0], "texture": "#armor"},
+        "west": {"uv": [1.25, 0.0, 2.25, 1.0], "texture": "#armor"},
+        "east": {"uv": [1.25, 0.0, 2.25, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Aft armor north",
+      "from": [3.16, 12.17685066, -1.25],
+      "to": [12.84, 17.8, 0.45],
+      "faces": {
+        "up": {"uv": [0.0, 0.0, 1.0, 1.0], "texture": "#armor"},
+        "north": {"uv": [3.75, 0.0, 4.75, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Aft armor north port bevel",
+      "from": [1.46, 12.17685066, 0.45],
+      "to": [3.864163056, 17.8, 1.652081528],
+      "rotation": {"axis": "y", "angle": 45, "origin": [1.46, 12.17685066, 0.45]},
+      "faces": {
+        "up": {"uv": [0.0, 0.0, 1.0, 1.0], "texture": "#armor"},
+        "north": {"uv": [2.5, 0.0, 3.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Aft armor north starboard bevel",
+      "from": [12.84, 12.17685066, -1.25],
+      "to": [15.244163056, 17.8, -0.047918472],
+      "rotation": {"axis": "y", "angle": -45, "origin": [12.84, 12.17685066, -1.25]},
+      "faces": {
+        "up": {"uv": [0.0, 0.0, 1.0, 1.0], "texture": "#armor"},
+        "north": {"uv": [1.25, 0.0, 2.25, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Forward roof",
+      "from": [1.46, 11.363547013, 4.6],
+      "to": [14.54, 17.8, 10.931994372],
+      "rotation": {"axis": "x", "angle": 22.5, "origin": [8, 17.8, 4.6]},
+      "faces": {
+        "up": {"uv": [0.0, 1.5, 7.0, 4.0], "texture": "#armor"},
+        "west": {"uv": [1.25, 0.0, 2.25, 1.0], "texture": "#armor"},
+        "east": {"uv": [1.25, 0.0, 2.25, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Sloped front",
+      "from": [1.46, 10.501367261, 10.45],
+      "to": [14.54, 15.37685066, 14.9754834],
+      "rotation": {"axis": "x", "angle": 45, "origin": [8, 15.37685066, 10.45]},
+      "faces": {
+        "up": {"uv": [0.0, 4.5, 7.0, 7.0], "texture": "#armor"},
+        "west": {"uv": [1.25, 0.0, 2.25, 1.0], "texture": "#armor"},
+        "east": {"uv": [1.25, 0.0, 2.25, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Port rear rangefinder hood",
+      "from": [0, 15.22, -0.4],
+      "to": [2.48, 16.55, 2.62],
+      "faces": {
+        "up": {"uv": [6.25, 0.0, 7.25, 1.0], "texture": "#armor"},
+        "down": {"uv": [8.75, 0.0, 9.75, 1.0], "texture": "#armor"},
+        "north": {"uv": [7.5, 0.0, 8.5, 1.0], "texture": "#armor"},
+        "south": {"uv": [1.25, 0.0, 2.25, 1.0], "texture": "#armor"},
+        "west": {"uv": [7.5, 0.0, 8.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Starboard rear rangefinder hood",
+      "from": [13.52, 15.22, -0.4],
+      "to": [16, 16.55, 2.62],
+      "faces": {
+        "up": {"uv": [6.25, 0.0, 7.25, 1.0], "texture": "#armor"},
+        "down": {"uv": [8.75, 0.0, 9.75, 1.0], "texture": "#armor"},
+        "north": {"uv": [7.5, 0.0, 8.5, 1.0], "texture": "#armor"},
+        "south": {"uv": [1.25, 0.0, 2.25, 1.0], "texture": "#armor"},
+        "east": {"uv": [7.5, 0.0, 8.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Port cheek stud",
+      "from": [1.2, 13.65, 6.84],
+      "to": [1.49, 14.23, 7.46],
+      "faces": {
+        "west": {"uv": [7.5, 0.0, 8.5, 1.0], "texture": "#armor"},
+        "up": {"uv": [15.0, 0.0, 16.0, 1.0], "texture": "#armor"},
+        "down": {"uv": [8.75, 0.0, 9.75, 1.0], "texture": "#armor"},
+        "north": {"uv": [1.25, 0.0, 2.25, 1.0], "texture": "#armor"},
+        "south": {"uv": [2.5, 0.0, 3.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Starboard cheek stud",
+      "from": [14.51, 13.65, 6.84],
+      "to": [14.8, 14.23, 7.46],
+      "faces": {
+        "east": {"uv": [7.5, 0.0, 8.5, 1.0], "texture": "#armor"},
+        "up": {"uv": [15.0, 0.0, 16.0, 1.0], "texture": "#armor"},
+        "down": {"uv": [8.75, 0.0, 9.75, 1.0], "texture": "#armor"},
+        "north": {"uv": [1.25, 0.0, 2.25, 1.0], "texture": "#armor"},
+        "south": {"uv": [2.5, 0.0, 3.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Tube 1 boot",
+      "from": [4.485, 9.585, 12.58],
+      "to": [6.415, 11.515, 14.12],
+      "rotation": {"axis": "z", "angle": 45, "origin": [5.45, 10.55, 12.58]},
+      "faces": {
+        "up": {"uv": [10.0, 0.0, 11.0, 1.0], "texture": "#armor"},
+        "west": {"uv": [10.0, 0.0, 11.0, 1.0], "texture": "#armor"},
+        "east": {"uv": [10.0, 0.0, 11.0, 1.0], "texture": "#armor"},
+        "down": {"uv": [10.0, 0.0, 11.0, 1.0], "texture": "#armor"},
+        "south": {"uv": [7.5, 10.75, 10.25, 13.5], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Tube 1 sleeve",
+      "from": [4.675, 9.775, 14.12],
+      "to": [6.225, 11.325, 16.5],
+      "rotation": {"axis": "z", "angle": 45, "origin": [5.45, 10.55, 14.12]},
+      "faces": {
+        "up": {"uv": [7.5, 7.25, 12.0, 8.5], "texture": "#armor", "rotation": 90},
+        "west": {"uv": [7.5, 7.25, 12.0, 8.5], "texture": "#armor"},
+        "east": {"uv": [7.5, 9.0, 12.0, 10.25], "texture": "#armor"},
+        "down": {"uv": [7.5, 9.0, 12.0, 10.25], "texture": "#armor", "rotation": 90},
+        "south": {"uv": [12.5, 0.0, 13.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Tube 1 shoulder",
+      "from": [4.77, 9.87, 16.5],
+      "to": [6.13, 11.23, 18.35],
+      "rotation": {"axis": "z", "angle": 45, "origin": [5.45, 10.55, 16.5]},
+      "faces": {
+        "up": {"uv": [7.5, 7.25, 12.0, 8.5], "texture": "#armor", "rotation": 90},
+        "west": {"uv": [7.5, 7.25, 12.0, 8.5], "texture": "#armor"},
+        "east": {"uv": [7.5, 9.0, 12.0, 10.25], "texture": "#armor"},
+        "down": {"uv": [7.5, 9.0, 12.0, 10.25], "texture": "#armor", "rotation": 90},
+        "south": {"uv": [12.5, 0.0, 13.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Tube 1 barrel",
+      "from": [4.885, 9.985, 18.35],
+      "to": [6.015, 11.115, 31.25],
+      "rotation": {"axis": "z", "angle": 45, "origin": [5.45, 10.55, 18.35]},
+      "faces": {
+        "up": {"uv": [7.5, 3.75, 12.0, 5.0], "texture": "#armor", "rotation": 90},
+        "west": {"uv": [7.5, 3.75, 12.0, 5.0], "texture": "#armor"},
+        "east": {"uv": [7.5, 5.5, 12.0, 6.75], "texture": "#armor"},
+        "down": {"uv": [7.5, 5.5, 12.0, 6.75], "texture": "#armor", "rotation": 90},
+        "south": {"uv": [13.0, 6.0, 15.25, 8.25], "texture": "#muzzle"}
+      }
+    },
+    {
+      "name": "Tube 2 boot",
+      "from": [9.585, 9.585, 12.58],
+      "to": [11.515, 11.515, 14.12],
+      "rotation": {"axis": "z", "angle": 45, "origin": [10.55, 10.55, 12.58]},
+      "faces": {
+        "up": {"uv": [10.0, 0.0, 11.0, 1.0], "texture": "#armor"},
+        "west": {"uv": [10.0, 0.0, 11.0, 1.0], "texture": "#armor"},
+        "east": {"uv": [10.0, 0.0, 11.0, 1.0], "texture": "#armor"},
+        "down": {"uv": [10.0, 0.0, 11.0, 1.0], "texture": "#armor"},
+        "south": {"uv": [7.5, 10.75, 10.25, 13.5], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Tube 2 sleeve",
+      "from": [9.775, 9.775, 14.12],
+      "to": [11.325, 11.325, 16.5],
+      "rotation": {"axis": "z", "angle": 45, "origin": [10.55, 10.55, 14.12]},
+      "faces": {
+        "up": {"uv": [7.5, 7.25, 12.0, 8.5], "texture": "#armor", "rotation": 90},
+        "west": {"uv": [7.5, 7.25, 12.0, 8.5], "texture": "#armor"},
+        "east": {"uv": [7.5, 9.0, 12.0, 10.25], "texture": "#armor"},
+        "down": {"uv": [7.5, 9.0, 12.0, 10.25], "texture": "#armor", "rotation": 90},
+        "south": {"uv": [12.5, 0.0, 13.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Tube 2 shoulder",
+      "from": [9.87, 9.87, 16.5],
+      "to": [11.23, 11.23, 18.35],
+      "rotation": {"axis": "z", "angle": 45, "origin": [10.55, 10.55, 16.5]},
+      "faces": {
+        "up": {"uv": [7.5, 7.25, 12.0, 8.5], "texture": "#armor", "rotation": 90},
+        "west": {"uv": [7.5, 7.25, 12.0, 8.5], "texture": "#armor"},
+        "east": {"uv": [7.5, 9.0, 12.0, 10.25], "texture": "#armor"},
+        "down": {"uv": [7.5, 9.0, 12.0, 10.25], "texture": "#armor", "rotation": 90},
+        "south": {"uv": [12.5, 0.0, 13.5, 1.0], "texture": "#armor"}
+      }
+    },
+    {
+      "name": "Tube 2 barrel",
+      "from": [9.985, 9.985, 18.35],
+      "to": [11.115, 11.115, 31.25],
+      "rotation": {"axis": "z", "angle": 45, "origin": [10.55, 10.55, 18.35]},
+      "faces": {
+        "up": {"uv": [7.5, 3.75, 12.0, 5.0], "texture": "#armor", "rotation": 90},
+        "west": {"uv": [7.5, 3.75, 12.0, 5.0], "texture": "#armor"},
+        "east": {"uv": [7.5, 5.5, 12.0, 6.75], "texture": "#armor"},
+        "down": {"uv": [7.5, 5.5, 12.0, 6.75], "texture": "#armor", "rotation": 90},
+        "south": {"uv": [13.0, 6.0, 15.25, 8.25], "texture": "#muzzle"}
+      }
+    }
+  ]
+}

@@ -1,0 +1,192 @@
+{
+  "gui_light": "front",
+  "textures": {"particle": "piranport:item/british_single_6inch_gun_shield", "shield": "piranport:item/british_single_6inch_gun_shield", "muzzle": "piranport:item/british_single_6inch_gun_shield"},
+  "elements": [
+    {
+      "name": "Grip shoulder",
+      "from": [5.9, 8.2, 4.15],
+      "to": [10.1, 9.4, 8.65],
+      "faces": {
+        "north": {"uv": [10.5, 13.25, 11.75, 14.5], "texture": "#shield"},
+        "south": {"uv": [10.5, 13.25, 11.75, 14.5], "texture": "#shield"},
+        "west": {"uv": [10.5, 13.25, 11.75, 14.5], "texture": "#shield"},
+        "east": {"uv": [10.5, 13.25, 11.75, 14.5], "texture": "#shield"},
+        "up": {"uv": [10.5, 13.25, 11.75, 14.5], "texture": "#shield"},
+        "down": {"uv": [10.5, 13.25, 11.75, 14.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Hand grip",
+      "from": [6.45, 5.25, 4.65],
+      "to": [9.55, 8.2, 8.15],
+      "faces": {
+        "north": {"uv": [12.5, 12.0, 14.25, 13.0], "texture": "#shield"},
+        "south": {"uv": [12.5, 12.0, 14.25, 13.0], "texture": "#shield"},
+        "west": {"uv": [12.5, 13.25, 14.5, 15.25], "texture": "#shield"},
+        "east": {"uv": [12.5, 13.25, 14.5, 15.25], "texture": "#shield"},
+        "down": {"uv": [10.5, 13.25, 11.75, 14.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Shield",
+      "from": [2.6, 9.35, 1.9],
+      "to": [13.4, 17.55, 10.1],
+      "faces": {
+        "north": {"texture": "#shield", "uv": [0.0, 11.75, 5.5, 15.75]},
+        "west": {"texture": "#shield", "uv": [7.0, 0.0, 12.25, 5.0]},
+        "east": {"texture": "#shield", "uv": [7.0, 5.25, 12.25, 10.25]},
+        "up": {"texture": "#shield", "uv": [0.0, 0.0, 6.75, 5.0]}
+      }
+    },
+    {
+      "name": "Shield underside",
+      "from": [2.6, 9.35, 1.9],
+      "to": [13.4, 17.55, 12.1],
+      "faces": {
+        "down": {"uv": [10.5, 13.25, 11.75, 14.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Sloping shield nose",
+      "from": [2.6, 9.35, 10.1],
+      "to": [13.4, 17.55, 12.1],
+      "faces": {
+        "west": {"uv": [12.5, 0.0, 13.75, 5.0], "texture": "#shield"},
+        "east": {"uv": [14.0, 0.0, 15.25, 5.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Front armor with vision slits",
+      "from": [2.6, 9.35, 11.9],
+      "to": [13.4, 16.721573, 12.1],
+      "faces": {
+        "south": {"uv": [0.0, 5.25, 6.75, 9.75], "texture": "#shield"},
+        "west": {"texture": "#shield", "uv": [15.5, 1.5, 16.0, 2.0]},
+        "east": {"texture": "#shield", "uv": [15.5, 1.5, 16.0, 2.0]}
+      }
+    },
+    {
+      "name": "Rounded roof lip",
+      "from": [2.6001000000000003, 16.150000000000002, 10.1],
+      "to": [13.3999, 17.55, 12.264784],
+      "rotation": {"origin": [8, 17.55, 10.1], "axis": "x", "angle": 22.5},
+      "faces": {
+        "up": {"uv": [0.0, 10.0, 6.75, 11.5], "texture": "#shield"},
+        "west": {"texture": "#shield", "uv": [15.5, 1.5, 16.0, 2.0]},
+        "east": {"texture": "#shield", "uv": [15.5, 1.5, 16.0, 2.0]}
+      }
+    },
+    {
+      "name": "Rear roof rib",
+      "from": [2.6, 17.55, 2.06],
+      "to": [13.4, 17.82, 2.48],
+      "faces": {
+        "north": {"uv": [10.5, 12.0, 12.0, 12.75], "texture": "#shield"},
+        "south": {"uv": [10.5, 12.0, 12.0, 12.75], "texture": "#shield"},
+        "west": {"uv": [10.5, 12.0, 12.0, 12.75], "texture": "#shield"},
+        "east": {"uv": [10.5, 12.0, 12.0, 12.75], "texture": "#shield"},
+        "up": {"uv": [10.5, 12.0, 12.0, 12.75], "texture": "#shield"},
+        "down": {"uv": [10.5, 12.0, 12.0, 12.75], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Port rear rail support",
+      "from": [2.4, 16.95, 1.65],
+      "to": [2.68, 18.25, 1.94],
+      "faces": {
+        "north": {"uv": [10.5, 12.0, 12.0, 12.75], "texture": "#shield"},
+        "south": {"uv": [10.5, 12.0, 12.0, 12.75], "texture": "#shield"},
+        "west": {"uv": [10.5, 12.0, 12.0, 12.75], "texture": "#shield"},
+        "east": {"uv": [10.5, 12.0, 12.0, 12.75], "texture": "#shield"},
+        "up": {"uv": [10.5, 12.0, 12.0, 12.75], "texture": "#shield"},
+        "down": {"uv": [10.5, 12.0, 12.0, 12.75], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Starboard rear rail support",
+      "from": [13.32, 16.95, 1.65],
+      "to": [13.6, 18.25, 1.94],
+      "faces": {
+        "north": {"uv": [10.5, 12.0, 12.0, 12.75], "texture": "#shield"},
+        "south": {"uv": [10.5, 12.0, 12.0, 12.75], "texture": "#shield"},
+        "west": {"uv": [10.5, 12.0, 12.0, 12.75], "texture": "#shield"},
+        "east": {"uv": [10.5, 12.0, 12.0, 12.75], "texture": "#shield"},
+        "up": {"uv": [10.5, 12.0, 12.0, 12.75], "texture": "#shield"},
+        "down": {"uv": [10.5, 12.0, 12.0, 12.75], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Rear guard rail",
+      "from": [2.68, 17.99, 1.65],
+      "to": [13.32, 18.25, 1.94],
+      "faces": {
+        "north": {"uv": [10.5, 12.0, 12.0, 12.75], "texture": "#shield"},
+        "south": {"uv": [10.5, 12.0, 12.0, 12.75], "texture": "#shield"},
+        "west": {"uv": [10.5, 12.0, 12.0, 12.75], "texture": "#shield"},
+        "east": {"uv": [10.5, 12.0, 12.0, 12.75], "texture": "#shield"},
+        "up": {"uv": [10.5, 12.0, 12.0, 12.75], "texture": "#shield"},
+        "down": {"uv": [10.5, 12.0, 12.0, 12.75], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Canvas surround",
+      "from": [5.8, 11.75, 12.1],
+      "to": [10.2, 16.5, 12.49],
+      "faces": {
+        "south": {"uv": [12.5, 12.0, 14.25, 13.0], "texture": "#shield"},
+        "up": {"uv": [10.5, 12.0, 12.0, 12.75], "texture": "#shield"},
+        "down": {"uv": [10.5, 13.25, 11.75, 14.5], "texture": "#shield"},
+        "west": {"uv": [12.5, 12.0, 14.25, 13.0], "texture": "#shield"},
+        "east": {"uv": [12.5, 12.0, 14.25, 13.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Canvas skirt",
+      "from": [6.07, 12.03, 12.49],
+      "to": [9.93, 16.18, 13.1],
+      "faces": {
+        "south": {"uv": [14.75, 5.5, 15.75, 7.5], "texture": "#shield"},
+        "up": {"uv": [12.5, 8.5, 14.5, 10.0], "texture": "#shield"},
+        "down": {"uv": [14.75, 5.5, 15.75, 7.5], "texture": "#shield"},
+        "west": {"uv": [12.5, 5.25, 14.5, 8.0], "texture": "#shield"},
+        "east": {"uv": [12.5, 5.25, 14.5, 8.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Canvas folds",
+      "from": [6.42, 12.43, 13.1],
+      "to": [9.58, 15.62, 13.86],
+      "faces": {
+        "south": {"uv": [14.75, 5.5, 15.75, 7.5], "texture": "#shield"},
+        "up": {"uv": [12.5, 8.5, 14.5, 10.0], "texture": "#shield"},
+        "down": {"uv": [14.75, 5.5, 15.75, 7.5], "texture": "#shield"},
+        "west": {"uv": [12.5, 5.25, 14.5, 8.0], "texture": "#shield"},
+        "east": {"uv": [12.5, 5.25, 14.5, 8.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Canvas neck",
+      "from": [7.09, 12.88, 13.86],
+      "to": [8.91, 14.86, 14.43],
+      "faces": {
+        "south": {"uv": [14.75, 5.5, 15.75, 7.5], "texture": "#shield"},
+        "up": {"uv": [12.5, 8.5, 14.5, 10.0], "texture": "#shield"},
+        "down": {"uv": [14.75, 5.5, 15.75, 7.5], "texture": "#shield"},
+        "west": {"uv": [12.5, 5.25, 14.5, 8.0], "texture": "#shield"},
+        "east": {"uv": [12.5, 5.25, 14.5, 8.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Barrel",
+      "from": [7.45, 13.2, 14.43],
+      "to": [8.55, 14.3, 24.75],
+      "faces": {
+        "south": {"uv": [8.75, 12.0, 10.0, 13.25], "texture": "#muzzle"},
+        "west": {"uv": [7.5, 10.5, 14.25, 11.25], "texture": "#shield"},
+        "east": {"uv": [7.5, 10.5, 14.25, 11.25], "texture": "#shield"},
+        "up": {"uv": [7.5, 11.5, 8.25, 15.75], "texture": "#shield"},
+        "down": {"uv": [14.75, 12.0, 15.75, 13.5], "texture": "#shield"}
+      }
+    }
+  ]
+}

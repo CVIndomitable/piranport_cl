@@ -5,6 +5,8 @@ public final class RiggingGeometry {
     public static final double HULL_DOWN = 0.28;
     public static final double HULL_BACK = 0.34;
     public static final float SIDE_ITEM_SCALE = 0.42f;
+    public static final float US_SINGLE_5IN_MODEL_SCALE = 0.85f;
+    public static final float COMPACT_TWIN_GUN_MODEL_SCALE = 0.60f;
 
     private RiggingGeometry() {}
 

@@ -1,0 +1,13 @@
+{
+  "loader": "neoforge:obj",
+  "model": "piranport:models/item/fourteen_barrel_gun_mounted.obj",
+  "automatic_culling": false,
+  "emissive_ambient": false,
+  "flip_v": false,
+  "gui_light": "front",
+  "textures": {
+    "particle": "piranport:item/fourteen_barrel_gun_turret",
+    "armor": "piranport:item/fourteen_barrel_gun_turret",
+    "muzzle": "piranport:item/fourteen_barrel_gun_turret"
+  }
+}

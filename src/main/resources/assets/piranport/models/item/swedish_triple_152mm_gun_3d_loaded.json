@@ -1,6 +1,3 @@
 {
-  "parent": "piranport:item/swedish_triple_152mm_gun_3d",
-  "textures": {
-    "muzzle_empty": "piranport:item/swedish_triple_152mm_gun_muzzle_loaded"
-  }
+  "parent": "piranport:item/swedish_triple_152mm_gun_mounted_loaded"
 }

@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/triple_152mm_dp_gun_46_mounted",
+  "textures": {
+    "muzzle": "piranport:item/triple_152mm_dp_gun_46_turret_loaded"
+  }
+}

@@ -16,6 +16,7 @@ import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
 import com.piranport.registry.ModMenuTypes;
 import com.piranport.registry.WeaponItems;
+import com.piranport.rigging.RiggingGeometry;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.client.renderer.item.CompassItemPropertyFunction;
 import net.minecraft.client.renderer.item.ItemProperties;
@@ -41,139 +42,184 @@ import net.neoforged.fml.common.EventBusSubscriber.Bus;
 public class ClientModEvents {
 
     /** 2026-10-18 批量主炮：共用 CatalogGunRenderer，改型与原型可共享同一套素材。 */
-    private static final CatalogGunRenderer.Spec JP_356 = CatalogGunRenderer.spec(
+    private static final CatalogGunRenderer.Spec JP_356 = CatalogGunRenderer.specWithHeldModel(
             "japanese_twin_356mm_gun", ModItems.JAPANESE_TWIN_356MM_GUN);
-    private static final CatalogGunRenderer.Spec US_14 = CatalogGunRenderer.spec(
-            "us_triple_14inch_gun", ModItems.US_TRIPLE_14INCH_GUN, ModItems.US_TRIPLE_14INCH_GUN_KAI);
-    private static final CatalogGunRenderer.Spec BRIT_QUAD_14 = CatalogGunRenderer.spec(
+    private static final CatalogGunRenderer.Spec US_14 = CatalogGunRenderer.specWithHeldModel(
+            "us_triple_14inch_gun", ModItems.US_TRIPLE_14INCH_GUN);
+    private static final CatalogGunRenderer.Spec US_14_KAI = CatalogGunRenderer.specWithHeldModel(
+            "us_triple_14inch_gun_kai", "us_triple_14inch_gun", ModItems.US_TRIPLE_14INCH_GUN_KAI);
+    private static final CatalogGunRenderer.Spec BRIT_QUAD_14 = CatalogGunRenderer.specWithHeldModel(
             "british_quad_14inch_gun", ModItems.BRITISH_QUAD_14INCH_GUN);
-    private static final CatalogGunRenderer.Spec BRIT_QUAD_14_284 = CatalogGunRenderer.spec(
+    private static final CatalogGunRenderer.Spec BRIT_QUAD_14_284 = CatalogGunRenderer.specWithHeldModel(
             "british_quad_14inch_gun_284", ModItems.BRITISH_QUAD_14INCH_GUN_284);
-    private static final CatalogGunRenderer.Spec BRIT_TWIN_15 = CatalogGunRenderer.spec(
+    private static final CatalogGunRenderer.Spec BRIT_TWIN_15 = CatalogGunRenderer.specWithHeldModel(
             "british_twin_15inch_gun", ModItems.BRITISH_TWIN_15INCH_GUN);
-    private static final CatalogGunRenderer.Spec BRIT_TWIN_15_KAI = CatalogGunRenderer.spec(
+    private static final CatalogGunRenderer.Spec GERMAN_TWIN_380 = CatalogGunRenderer.specWithHeldModel(
+            "german_twin_380mm_gun", ModItems.GERMAN_TWIN_380MM_GUN);
+    private static final CatalogGunRenderer.Spec BRIT_TWIN_15_KAI = CatalogGunRenderer.specWithHeldModel(
             "british_twin_15inch_gun_kai", ModItems.BRITISH_TWIN_15INCH_GUN_KAI);
-    private static final CatalogGunRenderer.Spec IT_381 = CatalogGunRenderer.spec(
+    private static final CatalogGunRenderer.Spec IT_381 = CatalogGunRenderer.specWithHeldModel(
             "italian_triple_381mm_gun", ModItems.ITALIAN_TRIPLE_381MM_GUN);
-    private static final CatalogGunRenderer.Spec IT_381_KAI = CatalogGunRenderer.spec(
+    private static final CatalogGunRenderer.Spec IT_381_KAI = CatalogGunRenderer.specWithHeldModel(
             "italian_triple_381mm_gun_kai", ModItems.ITALIAN_TRIPLE_381MM_GUN_KAI);
-    private static final CatalogGunRenderer.Spec US_16 = CatalogGunRenderer.spec(
-            "us_twin_16inch_gun", ModItems.US_TWIN_16INCH_GUN, ModItems.US_TWIN_16INCH_GUN_KAI);
-    private static final CatalogGunRenderer.Spec JP_410 = CatalogGunRenderer.spec(
+    private static final CatalogGunRenderer.Spec US_16 = CatalogGunRenderer.specWithHeldModel(
+            "us_twin_16inch_gun", ModItems.US_TWIN_16INCH_GUN);
+    private static final CatalogGunRenderer.Spec US_16_KAI = CatalogGunRenderer.specWithHeldModel(
+            "us_twin_16inch_gun_kai", "us_twin_16inch_gun", ModItems.US_TWIN_16INCH_GUN_KAI);
+    private static final CatalogGunRenderer.Spec JP_410 = CatalogGunRenderer.specWithHeldModel(
             "japanese_twin_410mm_gun", ModItems.JAPANESE_TWIN_410MM_GUN);
-    private static final CatalogGunRenderer.Spec DE_406 = CatalogGunRenderer.spec(
+    private static final CatalogGunRenderer.Spec DE_406 = CatalogGunRenderer.specWithHeldModel(
             "german_twin_406mm_gun", ModItems.GERMAN_TWIN_406MM_GUN);
-    private static final CatalogGunRenderer.Spec BRIT_16 = CatalogGunRenderer.spec(
+    private static final CatalogGunRenderer.Spec BRIT_16 = CatalogGunRenderer.specWithHeldModel(
             "british_triple_16inch_gun", ModItems.BRITISH_TRIPLE_16INCH_GUN);
-    private static final CatalogGunRenderer.Spec BRIT_16_KAI = CatalogGunRenderer.spec(
+    private static final CatalogGunRenderer.Spec BRIT_16_KAI = CatalogGunRenderer.specWithHeldModel(
             "british_triple_16inch_gun_kai", ModItems.BRITISH_TRIPLE_16INCH_GUN_KAI);
-    private static final CatalogGunRenderer.Spec US_16_MK6 = CatalogGunRenderer.spec(
+    private static final CatalogGunRenderer.Spec US_16_MK6 = CatalogGunRenderer.specWithHeldModel(
             "us_triple_16inch_gun_mk6", ModItems.US_TRIPLE_16INCH_GUN_MK6);
-    private static final CatalogGunRenderer.Spec US_16_MK7 = CatalogGunRenderer.spec(
+    private static final CatalogGunRenderer.Spec US_16_MK7 = CatalogGunRenderer.specWithHeldModel(
             "us_triple_16inch_gun_mk7", ModItems.US_TRIPLE_16INCH_GUN_MK7);
-    private static final CatalogGunRenderer.Spec DE_SKC40_420 = CatalogGunRenderer.spec(
+    private static final CatalogGunRenderer.Spec DE_SKC40_420 = CatalogGunRenderer.specWithHeldModel(
             "german_skc40_triple_420mm_gun", ModItems.GERMAN_SKC40_TRIPLE_420MM_GUN);
-    private static final CatalogGunRenderer.Spec BRIT_SINGLE_18 = CatalogGunRenderer.spec(
+    private static final CatalogGunRenderer.Spec BRIT_SINGLE_18 = CatalogGunRenderer.specWithHeldModel(
             "british_single_18inch_gun", ModItems.BRITISH_SINGLE_18INCH_GUN);
-    private static final CatalogGunRenderer.Spec BRIT_TWIN_18 = CatalogGunRenderer.spec(
+    private static final CatalogGunRenderer.Spec BRIT_TWIN_18 = CatalogGunRenderer.specWithHeldModel(
             "british_twin_18inch_gun", ModItems.BRITISH_TWIN_18INCH_GUN);
-    private static final CatalogGunRenderer.Spec US_TWIN_18 = CatalogGunRenderer.spec(
+    private static final CatalogGunRenderer.Spec US_TWIN_18 = CatalogGunRenderer.specWithHeldModel(
             "us_twin_18inch_gun", ModItems.US_TWIN_18INCH_GUN);
-    private static final CatalogGunRenderer.Spec JP_460 = CatalogGunRenderer.spec(
+    private static final CatalogGunRenderer.Spec JP_460 = CatalogGunRenderer.specWithHeldModel(
             "japanese_triple_460mm_gun", ModItems.JAPANESE_TRIPLE_460MM_GUN);
-    private static final CatalogGunRenderer.Spec SOV_460 = CatalogGunRenderer.spec(
+    private static final CatalogGunRenderer.Spec SOV_460 = CatalogGunRenderer.specWithHeldModel(
             "soviet_triple_460mm_gun", ModItems.SOVIET_TRIPLE_460MM_GUN);
-    private static final CatalogGunRenderer.Spec BRIT_20_TWIN = CatalogGunRenderer.spec(
+    private static final CatalogGunRenderer.Spec BRIT_20_TWIN = CatalogGunRenderer.specWithHeldModel(
             "british_twin_20inch_gun", ModItems.BRITISH_TWIN_20INCH_GUN);
-    private static final CatalogGunRenderer.Spec US_20_TWIN = CatalogGunRenderer.spec(
+    private static final CatalogGunRenderer.Spec US_20_TWIN = CatalogGunRenderer.specWithHeldModel(
             "us_twin_20inch_gun", ModItems.US_TWIN_20INCH_GUN);
+    private static final CatalogGunRenderer.Spec FR_QUAD_380 = CatalogGunRenderer.specWithHeldModel(
+            "french_quad_380mm_gun", ModItems.FRENCH_QUAD_380MM_GUN);
+    private static final CatalogGunRenderer.Spec FOURTEEN_BARREL = CatalogGunRenderer.specWithHeldModel(
+            "fourteen_barrel_gun", ModItems.FOURTEEN_BARREL_GUN);
 
     /** 2026-10-25 批次：中口径主炮的手持 3D 模型，统一走 CatalogGunRenderer。 */
     private static final CatalogGunRenderer.Spec US_SINGLE_5IN =
-            CatalogGunRenderer.spec("us_single_5inch_gun",
+            CatalogGunRenderer.specWithHeldModel("us_single_5inch_gun", RiggingGeometry.US_SINGLE_5IN_MODEL_SCALE,
                     WeaponItems.CATALOG_GUNS.get("us_single_5inch_gun"));
     private static final CatalogGunRenderer.Spec US_TWIN_5IN =
-            CatalogGunRenderer.spec("us_twin_5inch_gun",
+            CatalogGunRenderer.specWithHeldModel("us_twin_5inch_gun", RiggingGeometry.COMPACT_TWIN_GUN_MODEL_SCALE,
                     WeaponItems.CATALOG_GUNS.get("us_twin_5inch_gun"));
     private static final CatalogGunRenderer.Spec US_TWIN_5IN_DP =
-            CatalogGunRenderer.spec("us_twin_5inch_dp_gun",
+            CatalogGunRenderer.specWithHeldModel("us_twin_5inch_dp_gun", RiggingGeometry.COMPACT_TWIN_GUN_MODEL_SCALE,
                     WeaponItems.CATALOG_GUNS.get("us_twin_5inch_dp_gun"));
     private static final CatalogGunRenderer.Spec TWIN_5IN_L54_DP =
-            CatalogGunRenderer.spec("twin_5inch_l54_dp_gun",
+            CatalogGunRenderer.specWithHeldModel("twin_5inch_l54_dp_gun",
                     WeaponItems.CATALOG_GUNS.get("twin_5inch_l54_dp_gun"));
     private static final CatalogGunRenderer.Spec JP_SINGLE_140 =
-            CatalogGunRenderer.spec("japanese_single_140mm_gun",
+            CatalogGunRenderer.specWithHeldModel("japanese_single_140mm_gun",
                     WeaponItems.CATALOG_GUNS.get("japanese_single_140mm_gun"));
     private static final CatalogGunRenderer.Spec BRIT_SINGLE_6 =
-            CatalogGunRenderer.spec("british_single_6inch_gun",
+            CatalogGunRenderer.specWithHeldModel("british_single_6inch_gun",
                     WeaponItems.CATALOG_GUNS.get("british_single_6inch_gun"));
+    private static final CatalogGunRenderer.Spec JP_SINGLE_152 =
+            CatalogGunRenderer.specWithHeldModel("japanese_single_152mm_gun",
+                    WeaponItems.CATALOG_GUNS.get("japanese_single_152mm_gun"));
     private static final CatalogGunRenderer.Spec BRIT_TWIN_6 =
-            CatalogGunRenderer.spec("british_twin_6inch_gun",
+            CatalogGunRenderer.specWithHeldModel("british_twin_6inch_gun",
                     WeaponItems.CATALOG_GUNS.get("british_twin_6inch_gun"));
     private static final CatalogGunRenderer.Spec JP_TWIN_152 =
-            CatalogGunRenderer.spec("japanese_twin_152mm_gun",
+            CatalogGunRenderer.specWithHeldModel("japanese_twin_152mm_gun",
                     WeaponItems.CATALOG_GUNS.get("japanese_twin_152mm_gun"));
     private static final CatalogGunRenderer.Spec BRIT_TRIPLE_6 =
-            CatalogGunRenderer.spec("british_triple_6inch_gun",
+            CatalogGunRenderer.specWithHeldModel("british_triple_6inch_gun",
                     WeaponItems.CATALOG_GUNS.get("british_triple_6inch_gun"));
     private static final CatalogGunRenderer.Spec US_TRIPLE_6 =
-            CatalogGunRenderer.spec("us_triple_6inch_gun",
+            CatalogGunRenderer.specWithHeldModel("us_triple_6inch_gun",
                     WeaponItems.CATALOG_GUNS.get("us_triple_6inch_gun"));
     private static final CatalogGunRenderer.Spec MK16_TRIPLE_6 =
-            CatalogGunRenderer.spec("mk16_triple_6inch_gun_flashless",
+            CatalogGunRenderer.specWithHeldModel("mk16_triple_6inch_gun_flashless",
                     WeaponItems.CATALOG_GUNS.get("mk16_triple_6inch_gun_flashless"));
     /** MK16DP 双联 6 英寸高射炮：同一套 BEWLR（物品栏图标 / 手持 3D 炮塔）。 */
     private static final CatalogGunRenderer.Spec US_MK16DP_TWIN_6 =
-            CatalogGunRenderer.spec("us_mk16dp_twin_6inch_gun",
+            CatalogGunRenderer.specWithHeldModel("us_mk16dp_twin_6inch_gun",
                     WeaponItems.CATALOG_GUNS.get("us_mk16dp_twin_6inch_gun"));
     /** 2026-10-25 批次二：三联 6 英寸 / 三联 180 毫米 / 双联 8 英寸。 */
     private static final CatalogGunRenderer.Spec IMPROVED_TRIPLE_6 =
-            CatalogGunRenderer.spec("improved_triple_6inch_gun",
+            CatalogGunRenderer.specWithHeldModel("improved_triple_6inch_gun",
                     WeaponItems.CATALOG_GUNS.get("improved_triple_6inch_gun"));
     private static final CatalogGunRenderer.Spec TRIPLE_152_DP_46 =
-            CatalogGunRenderer.spec("triple_152mm_dp_gun_46",
+            CatalogGunRenderer.specWithHeldModel("triple_152mm_dp_gun_46",
                     WeaponItems.CATALOG_GUNS.get("triple_152mm_dp_gun_46"));
     private static final CatalogGunRenderer.Spec SWEDISH_TRIPLE_152 =
-            CatalogGunRenderer.spec("swedish_triple_152mm_gun",
+            CatalogGunRenderer.specWithHeldModel("swedish_triple_152mm_gun",
                     WeaponItems.CATALOG_GUNS.get("swedish_triple_152mm_gun"));
     private static final CatalogGunRenderer.Spec SOVIET_TRIPLE_180 =
-            CatalogGunRenderer.spec("soviet_triple_180mm_gun",
+            CatalogGunRenderer.specWithHeldModel("soviet_triple_180mm_gun",
                     WeaponItems.CATALOG_GUNS.get("soviet_triple_180mm_gun"));
     private static final CatalogGunRenderer.Spec SOVIET_IMPROVED_TRIPLE_180 =
-            CatalogGunRenderer.spec("soviet_improved_triple_180mm_gun",
+            CatalogGunRenderer.specWithHeldModel("soviet_improved_triple_180mm_gun",
                     WeaponItems.CATALOG_GUNS.get("soviet_improved_triple_180mm_gun"));
     private static final CatalogGunRenderer.Spec BRIT_TWIN_8 =
-            CatalogGunRenderer.spec("british_twin_8inch_gun",
+            CatalogGunRenderer.specWithHeldModel("british_twin_8inch_gun",
                     WeaponItems.CATALOG_GUNS.get("british_twin_8inch_gun"));
     private static final CatalogGunRenderer.Spec JP_TWIN_203 =
-            CatalogGunRenderer.spec("japanese_twin_203mm_gun",
+            CatalogGunRenderer.specWithHeldModel("japanese_twin_203mm_gun",
                     WeaponItems.CATALOG_GUNS.get("japanese_twin_203mm_gun"));
-
-    /** 2026-10-25 批次：图鉴鱼雷发射器的手持 3D 模型，统一走 CatalogTorpedoLauncherRenderer。 */
-    private static final CatalogTorpedoLauncherRenderer.Spec QUINT_533_MK17 =
-            CatalogTorpedoLauncherRenderer.spec("quintuple_533mm_torpedo_mk17",
+    private static final CatalogGunRenderer.Spec GERMAN_TWIN_203 =
+            CatalogGunRenderer.specWithHeldModel("german_twin_203mm_gun", ModItems.GERMAN_TWIN_203MM_GUN);
+    private static final CatalogGunRenderer.Spec GERMAN_TRIPLE_203 =
+            CatalogGunRenderer.specWithHeldModel("german_triple_203mm_gun", ModItems.GERMAN_TRIPLE_203MM_GUN);
+    private static final CatalogGunRenderer.Spec GERMAN_TRIPLE_283 =
+            CatalogGunRenderer.specWithHeldModel("german_triple_283mm_gun", ModItems.GERMAN_TRIPLE_283MM_GUN);
+    private static final CatalogGunRenderer.Spec ITALIAN_TWIN_203 =
+            CatalogGunRenderer.specWithHeldModel("italian_twin_203mm_gun",
+                    WeaponItems.CATALOG_GUNS.get("italian_twin_203mm_gun"));
+    private static final CatalogGunRenderer.Spec ITALIAN_TRIPLE_305 =
+            CatalogGunRenderer.specWithHeldModel("italian_triple_305mm_gun", ModItems.ITALIAN_TRIPLE_305MM_GUN);
+    private static final CatalogGunRenderer.Spec ITALIAN_TRIPLE_320 =
+            CatalogGunRenderer.specWithHeldModel("italian_triple_320mm_gun", ModItems.ITALIAN_TRIPLE_320MM_GUN);
+    private static final CatalogGunRenderer.Spec US_TRIPLE_8 =
+            CatalogGunRenderer.specWithHeldModel("us_triple_8inch_gun",
+                    WeaponItems.CATALOG_GUNS.get("us_triple_8inch_gun"));
+    private static final CatalogGunRenderer.Spec US_TRIPLE_12 =
+            CatalogGunRenderer.specWithHeldModel("us_triple_12inch_gun", ModItems.US_TRIPLE_12INCH_GUN);
+    private static final CatalogGunRenderer.Spec TRIPLE_TORPEDO_LAUNCHER =
+            CatalogGunRenderer.specWithHeldModel("triple_torpedo_launcher", ModItems.TRIPLE_TORPEDO_LAUNCHER);
+    private static final CatalogGunRenderer.Spec TRIPLE_533MM_TORPEDO =
+            CatalogGunRenderer.specWithHeldModel("triple_533mm_torpedo", "triple_torpedo_launcher",
+                    ModItems.TRIPLE_533MM_TORPEDO);
+    private static final CatalogGunRenderer.Spec QUAD_533MM_TORPEDO =
+            CatalogGunRenderer.specWithHeldModel("quad_533mm_torpedo", ModItems.QUAD_533MM_TORPEDO);
+    private static final CatalogGunRenderer.Spec QUAD_533MM_TORPEDO_UR_HIGH_SPEED =
+            CatalogGunRenderer.specWithHeldModel("quad_533mm_torpedo_ur_high_speed",
+                    ModItems.QUAD_533MM_TORPEDO_UR_HIGH_SPEED);
+    private static final CatalogGunRenderer.Spec QUINTUPLE_533MM_TORPEDO =
+            CatalogGunRenderer.specWithHeldModel("quintuple_533mm_torpedo",
+                    ModItems.QUINTUPLE_533MM_TORPEDO);
+    private static final CatalogGunRenderer.Spec QUINT_533_MK17 =
+            CatalogGunRenderer.specWithHeldModel("quintuple_533mm_torpedo_mk17",
                     ModItems.QUINTUPLE_533MM_TORPEDO_MK17);
-    private static final CatalogTorpedoLauncherRenderer.Spec QUINT_21IN_MK35 =
-            CatalogTorpedoLauncherRenderer.spec("quintuple_21in_torpedo_mk35",
+    private static final CatalogGunRenderer.Spec QUINT_21IN_MK35 =
+            CatalogGunRenderer.specWithHeldModel("quintuple_21in_torpedo_mk35",
                     ModItems.QUINTUPLE_21IN_TORPEDO_MK35);
-    private static final CatalogTorpedoLauncherRenderer.Spec QUINT_53_56 =
-            CatalogTorpedoLauncherRenderer.spec("quintuple_torpedo_launcher_53_56",
+    private static final CatalogGunRenderer.Spec QUINT_53_56 =
+            CatalogGunRenderer.specWithHeldModel("quintuple_torpedo_launcher_53_56",
                     ModItems.QUINTUPLE_TORPEDO_LAUNCHER_53_56);
-    private static final CatalogTorpedoLauncherRenderer.Spec QUINT_53_65 =
-            CatalogTorpedoLauncherRenderer.spec("quintuple_torpedo_launcher_53_65",
+    private static final CatalogGunRenderer.Spec QUINT_53_65 =
+            CatalogGunRenderer.specWithHeldModel("quintuple_torpedo_launcher_53_65",
                     ModItems.QUINTUPLE_TORPEDO_LAUNCHER_53_65);
-    private static final CatalogTorpedoLauncherRenderer.Spec TRIPLE_61CM =
-            CatalogTorpedoLauncherRenderer.spec("triple_61cm_torpedo",
+
+    private static final CatalogGunRenderer.Spec TRIPLE_61CM =
+            CatalogGunRenderer.specWithHeldModel("triple_61cm_torpedo",
                     ModItems.TRIPLE_61CM_TORPEDO);
-    private static final CatalogTorpedoLauncherRenderer.Spec TRIPLE_61CM_OXY =
-            CatalogTorpedoLauncherRenderer.spec("triple_61cm_oxygen_torpedo",
+
+    private static final CatalogGunRenderer.Spec TRIPLE_61CM_OXY =
+            CatalogGunRenderer.specWithHeldModel("triple_61cm_oxygen_torpedo",
                     ModItems.TRIPLE_61CM_OXYGEN_TORPEDO);
-    /** 四连 61 厘米常规型与氧气型共用同一张原画。 */
-    private static final CatalogTorpedoLauncherRenderer.Spec QUAD_61CM =
-            CatalogTorpedoLauncherRenderer.spec("quad_61cm_torpedo",
+
+    private static final CatalogGunRenderer.Spec QUAD_61CM =
+            CatalogGunRenderer.specWithHeldModel("quad_61cm_torpedo",
                     ModItems.QUAD_61CM_TORPEDO, ModItems.QUAD_61CM_OXYGEN_TORPEDO);
-    private static final CatalogTorpedoLauncherRenderer.Spec LAUNCHER_61CM_TYPE9 =
-            CatalogTorpedoLauncherRenderer.spec("torpedo_launcher_61cm_type9",
+
+    private static final CatalogGunRenderer.Spec LAUNCHER_61CM_TYPE9 =
+            CatalogGunRenderer.specWithHeldModel("torpedo_launcher_61cm_type9",
                     ModItems.TORPEDO_LAUNCHER_61CM_TYPE9);
     private static final CatalogTorpedoLauncherRenderer.Spec QUINT_61CM =
             CatalogTorpedoLauncherRenderer.spec("quintuple_61cm_torpedo",
@@ -209,24 +255,8 @@ public class ClientModEvents {
         event.register(Japanese12cmSingleGunRenderer.HELD_LOADED);
         event.register(Japanese127mmTwinGunRenderer.MODEL_EMPTY);
         event.register(Japanese127mmTwinGunRenderer.MODEL_LOADED);
-        event.register(GermanTwin203mmGunRenderer.MODEL_EMPTY);
-        event.register(GermanTwin203mmGunRenderer.MODEL_LOADED);
-        event.register(GermanTriple203mmGunRenderer.MODEL_EMPTY);
-        event.register(GermanTriple203mmGunRenderer.MODEL_LOADED);
-        event.register(GermanTriple283mmGunRenderer.MODEL_EMPTY);
-        event.register(GermanTriple283mmGunRenderer.MODEL_LOADED);
-        event.register(ItalianTriple305mmGunRenderer.MODEL_EMPTY);
-        event.register(ItalianTriple305mmGunRenderer.MODEL_LOADED);
-        event.register(UsTriple12inchGunRenderer.MODEL_EMPTY);
-        event.register(UsTriple12inchGunRenderer.MODEL_LOADED);
-        event.register(ItalianTriple320mmGunRenderer.MODEL_EMPTY);
-        event.register(ItalianTriple320mmGunRenderer.MODEL_LOADED);
-        event.register(Quad533mmTorpedoRenderer.MODEL_EMPTY);
-        event.register(Quad533mmTorpedoRenderer.MODEL_LOADED);
-        event.register(Quad533mmTorpedoRenderer.MODEL_EMPTY_UR);
-        event.register(Quad533mmTorpedoRenderer.MODEL_LOADED_UR);
-        event.register(Quintuple533mmTorpedoRenderer.MODEL_EMPTY);
-        event.register(Quintuple533mmTorpedoRenderer.MODEL_LOADED);
+        event.register(Japanese127mmTwinGunRenderer.HELD_EMPTY);
+        event.register(Japanese127mmTwinGunRenderer.HELD_LOADED);
         for (CatalogTorpedoLauncherRenderer.Spec spec : CatalogTorpedoLauncherRenderer.specs()) {
             event.register(spec.modelEmpty());
             event.register(spec.modelLoaded());
@@ -234,6 +264,10 @@ public class ClientModEvents {
         for (CatalogGunRenderer.Spec spec : CatalogGunRenderer.specs()) {
             event.register(spec.modelEmpty());
             event.register(spec.modelLoaded());
+            if (spec.hasHeldModel()) {
+                event.register(spec.heldEmpty());
+                event.register(spec.heldLoaded());
+            }
         }
     }
 
@@ -244,25 +278,6 @@ public class ClientModEvents {
                 ModItems.SINGLE_SMALL_GUN.get());
         event.registerItem(Japanese127mmTwinGunRenderer.CLIENT_EXTENSIONS,
                 ModItems.JAPANESE_127MM_TWIN_GUN.get());
-        event.registerItem(GermanTwin203mmGunRenderer.CLIENT_EXTENSIONS,
-                ModItems.GERMAN_TWIN_203MM_GUN.get());
-        event.registerItem(GermanTriple203mmGunRenderer.CLIENT_EXTENSIONS,
-                ModItems.GERMAN_TRIPLE_203MM_GUN.get());
-        event.registerItem(GermanTriple283mmGunRenderer.CLIENT_EXTENSIONS,
-                ModItems.GERMAN_TRIPLE_283MM_GUN.get());
-        event.registerItem(ItalianTriple305mmGunRenderer.CLIENT_EXTENSIONS,
-                ModItems.ITALIAN_TRIPLE_305MM_GUN.get());
-        event.registerItem(UsTriple12inchGunRenderer.CLIENT_EXTENSIONS,
-                ModItems.US_TRIPLE_12INCH_GUN.get());
-        event.registerItem(ItalianTriple320mmGunRenderer.CLIENT_EXTENSIONS,
-                ModItems.ITALIAN_TRIPLE_320MM_GUN.get());
-        // 四联533毫米鱼雷（本体与 ur 高速型共用一套发射器渲染）
-        event.registerItem(Quad533mmTorpedoRenderer.CLIENT_EXTENSIONS,
-                ModItems.QUAD_533MM_TORPEDO.get(),
-                ModItems.QUAD_533MM_TORPEDO_UR_HIGH_SPEED.get());
-        // 五联533毫米鱼雷
-        event.registerItem(Quintuple533mmTorpedoRenderer.CLIENT_EXTENSIONS,
-                ModItems.QUINTUPLE_533MM_TORPEDO.get());
         for (CatalogTorpedoLauncherRenderer.Spec spec : CatalogTorpedoLauncherRenderer.specs()) {
             for (var item : spec.items()) {
                 event.registerItem(CatalogTorpedoLauncherRenderer.extensionsFor(spec), item.get());
@@ -283,22 +298,6 @@ public class ClientModEvents {
         event.enqueueWork(Japanese12cmSingleGunRenderer::init);
         // 日本12.7厘米连装炮：物品栏画 2D 图标，手持渲染 3D 炮塔
         event.enqueueWork(Japanese127mmTwinGunRenderer::init);
-        // 德国双联203毫米炮：同一套 BEWLR 方案
-        event.enqueueWork(GermanTwin203mmGunRenderer::init);
-        // 德国三联203毫米炮：同一套 BEWLR 方案
-        event.enqueueWork(GermanTriple203mmGunRenderer::init);
-        // 德国三联283毫米炮：同一套 BEWLR 方案
-        event.enqueueWork(GermanTriple283mmGunRenderer::init);
-        // 意大利三联305毫米炮：同一套 BEWLR 方案
-        event.enqueueWork(ItalianTriple305mmGunRenderer::init);
-        // 美国三联12英寸炮：同一套 BEWLR 方案
-        event.enqueueWork(UsTriple12inchGunRenderer::init);
-        // 意大利三联320毫米炮：同一套 BEWLR 方案
-        event.enqueueWork(ItalianTriple320mmGunRenderer::init);
-        // 四联533毫米鱼雷：鱼雷发射器走同一套 BEWLR 方案
-        event.enqueueWork(Quad533mmTorpedoRenderer::init);
-        // 五联533毫米鱼雷：同一套 BEWLR 方案
-        event.enqueueWork(Quintuple533mmTorpedoRenderer::init);
         // 图鉴鱼雷发射器批次：共用 CatalogTorpedoLauncherRenderer
         event.enqueueWork(CatalogTorpedoLauncherRenderer::initAll);
         // 2026-10-18 批量主炮：共用 CatalogGunRenderer

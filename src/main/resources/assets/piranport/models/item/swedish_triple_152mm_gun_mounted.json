@@ -1,0 +1,655 @@
+{
+  "gui_light": "front",
+  "textures": {"particle": "piranport:item/swedish_triple_152mm_gun_turret", "steel": "piranport:item/swedish_triple_152mm_gun_turret", "muzzle": "piranport:item/swedish_triple_152mm_gun_turret"},
+  "elements": [
+    {
+      "name": "Turntable flange rear",
+      "from": [3.75, 6.2, -0.87],
+      "to": [12.25, 7.05, 2.33],
+      "faces": {
+        "up": {"uv": [5.25, 9.5, 7.0, 11.0], "texture": "#steel"},
+        "down": {"uv": [7.25, 9.5, 9.25, 11.0], "texture": "#steel"},
+        "north": {"uv": [5.25, 7.75, 9.25, 9.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable flange port rear",
+      "from": [0.55, 6.2, 2.33],
+      "to": [5.0754834, 7.05, 4.5927417],
+      "rotation": {"origin": [0.55, 6.2, 2.33], "axis": "y", "angle": 45},
+      "faces": {
+        "up": {"uv": [5.25, 9.5, 7.0, 11.0], "texture": "#steel"},
+        "down": {"uv": [7.25, 9.5, 9.25, 11.0], "texture": "#steel"},
+        "north": {"uv": [5.25, 7.75, 9.25, 9.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable flange starboard rear",
+      "from": [12.25, 6.2, -0.87],
+      "to": [16.7754834, 7.05, 1.3927417],
+      "rotation": {"origin": [12.25, 6.2, -0.87], "axis": "y", "angle": -45},
+      "faces": {
+        "up": {"uv": [5.25, 9.5, 7.0, 11.0], "texture": "#steel"},
+        "down": {"uv": [7.25, 9.5, 9.25, 11.0], "texture": "#steel"},
+        "north": {"uv": [5.25, 7.75, 9.25, 9.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable flange front",
+      "from": [3.75, 6.2, 11.15],
+      "to": [12.25, 7.05, 14.35],
+      "faces": {
+        "up": {"uv": [5.25, 9.5, 7.0, 11.0], "texture": "#steel"},
+        "down": {"uv": [7.25, 9.5, 9.25, 11.0], "texture": "#steel"},
+        "south": {"uv": [5.25, 7.75, 9.25, 9.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable flange port front",
+      "from": [0.55, 6.2, 8.8872583],
+      "to": [5.0754834, 7.05, 11.15],
+      "rotation": {"origin": [0.55, 6.2, 11.15], "axis": "y", "angle": -45},
+      "faces": {
+        "up": {"uv": [5.25, 9.5, 7.0, 11.0], "texture": "#steel"},
+        "down": {"uv": [7.25, 9.5, 9.25, 11.0], "texture": "#steel"},
+        "south": {"uv": [5.25, 7.75, 9.25, 9.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable flange starboard front",
+      "from": [12.25, 6.2, 12.0872583],
+      "to": [16.7754834, 7.05, 14.35],
+      "rotation": {"origin": [12.25, 6.2, 14.35], "axis": "y", "angle": 45},
+      "faces": {
+        "up": {"uv": [5.25, 9.5, 7.0, 11.0], "texture": "#steel"},
+        "down": {"uv": [7.25, 9.5, 9.25, 11.0], "texture": "#steel"},
+        "south": {"uv": [5.25, 7.75, 9.25, 9.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable flange middle",
+      "from": [0.55, 6.2, 2.33],
+      "to": [15.45, 7.05, 11.15],
+      "faces": {
+        "up": {"uv": [5.25, 9.5, 7.0, 11.0], "texture": "#steel"},
+        "down": {"uv": [7.25, 9.5, 9.25, 11.0], "texture": "#steel"},
+        "west": {"uv": [5.25, 7.75, 9.25, 9.25], "texture": "#steel"},
+        "east": {"uv": [5.25, 7.75, 9.25, 9.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable collar rear",
+      "from": [4.0, 7.05, -0.67],
+      "to": [12.0, 8.9, 2.38],
+      "faces": {
+        "up": {"uv": [5.25, 9.5, 7.0, 11.0], "texture": "#steel"},
+        "north": {"uv": [5.25, 7.75, 9.25, 9.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable collar port rear",
+      "from": [0.95, 7.05, 2.38],
+      "to": [5.26335137, 8.9, 4.53667568],
+      "rotation": {"origin": [0.95, 7.05, 2.38], "axis": "y", "angle": 45},
+      "faces": {
+        "up": {"uv": [5.25, 9.5, 7.0, 11.0], "texture": "#steel"},
+        "north": {"uv": [5.25, 7.75, 9.25, 9.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable collar starboard rear",
+      "from": [12.0, 7.05, -0.67],
+      "to": [16.31335137, 8.9, 1.48667568],
+      "rotation": {"origin": [12.0, 7.05, -0.67], "axis": "y", "angle": -45},
+      "faces": {
+        "up": {"uv": [5.25, 9.5, 7.0, 11.0], "texture": "#steel"},
+        "north": {"uv": [5.25, 7.75, 9.25, 9.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable collar front",
+      "from": [4.0, 7.05, 11.04],
+      "to": [12.0, 8.9, 14.09],
+      "faces": {
+        "up": {"uv": [5.25, 9.5, 7.0, 11.0], "texture": "#steel"},
+        "south": {"uv": [5.25, 7.75, 9.25, 9.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable collar port front",
+      "from": [0.95, 7.05, 8.88332432],
+      "to": [5.26335137, 8.9, 11.04],
+      "rotation": {"origin": [0.95, 7.05, 11.04], "axis": "y", "angle": -45},
+      "faces": {
+        "up": {"uv": [5.25, 9.5, 7.0, 11.0], "texture": "#steel"},
+        "south": {"uv": [5.25, 7.75, 9.25, 9.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable collar starboard front",
+      "from": [12.0, 7.05, 11.93332432],
+      "to": [16.31335137, 8.9, 14.09],
+      "rotation": {"origin": [12.0, 7.05, 14.09], "axis": "y", "angle": 45},
+      "faces": {
+        "up": {"uv": [5.25, 9.5, 7.0, 11.0], "texture": "#steel"},
+        "south": {"uv": [5.25, 7.75, 9.25, 9.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turntable collar middle",
+      "from": [0.95, 7.05, 2.38],
+      "to": [15.05, 8.9, 11.04],
+      "faces": {
+        "up": {"uv": [5.25, 9.5, 7.0, 11.0], "texture": "#steel"},
+        "west": {"uv": [5.25, 7.75, 9.25, 9.25], "texture": "#steel"},
+        "east": {"uv": [5.25, 7.75, 9.25, 9.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turret skirt rear",
+      "from": [1.7, 8.9, -1.05],
+      "to": [14.3, 9.6, 0.65],
+      "faces": {
+        "up": {"uv": [5.25, 9.5, 7.0, 11.0], "texture": "#steel"},
+        "down": {"uv": [7.25, 9.5, 9.25, 11.0], "texture": "#steel"},
+        "north": {"uv": [9.75, 7.75, 12.75, 9.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turret skirt port rear",
+      "from": [0, 8.9, 0.65],
+      "to": [2.40416306, 9.6, 1.85208153],
+      "rotation": {"origin": [0, 8.9, 0.65], "axis": "y", "angle": 45},
+      "faces": {
+        "up": {"uv": [5.25, 9.5, 7.0, 11.0], "texture": "#steel"},
+        "down": {"uv": [7.25, 9.5, 9.25, 11.0], "texture": "#steel"},
+        "north": {"uv": [9.75, 7.75, 12.75, 9.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turret skirt starboard rear",
+      "from": [14.3, 8.9, -1.05],
+      "to": [16.70416306, 9.6, 0.15208153],
+      "rotation": {"origin": [14.3, 8.9, -1.05], "axis": "y", "angle": -45},
+      "faces": {
+        "up": {"uv": [5.25, 9.5, 7.0, 11.0], "texture": "#steel"},
+        "down": {"uv": [7.25, 9.5, 9.25, 11.0], "texture": "#steel"},
+        "north": {"uv": [9.75, 7.75, 12.75, 9.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turret skirt front",
+      "from": [1.65, 8.9, 12.8],
+      "to": [14.35, 9.6, 14.45],
+      "faces": {
+        "up": {"uv": [5.25, 9.5, 7.0, 11.0], "texture": "#steel"},
+        "down": {"uv": [7.25, 9.5, 9.25, 11.0], "texture": "#steel"},
+        "south": {"uv": [9.75, 7.75, 12.75, 9.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turret skirt port front",
+      "from": [0, 8.9, 11.63327381],
+      "to": [2.33345238, 9.6, 12.8],
+      "rotation": {"origin": [0, 8.9, 12.8], "axis": "y", "angle": -45},
+      "faces": {
+        "up": {"uv": [5.25, 9.5, 7.0, 11.0], "texture": "#steel"},
+        "down": {"uv": [7.25, 9.5, 9.25, 11.0], "texture": "#steel"},
+        "south": {"uv": [9.75, 7.75, 12.75, 9.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turret skirt starboard front",
+      "from": [14.35, 8.9, 13.28327381],
+      "to": [16.68345238, 9.6, 14.45],
+      "rotation": {"origin": [14.35, 8.9, 14.45], "axis": "y", "angle": 45},
+      "faces": {
+        "up": {"uv": [5.25, 9.5, 7.0, 11.0], "texture": "#steel"},
+        "down": {"uv": [7.25, 9.5, 9.25, 11.0], "texture": "#steel"},
+        "south": {"uv": [9.75, 7.75, 12.75, 9.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Turret skirt middle",
+      "from": [0, 8.9, 0.65],
+      "to": [16, 9.6, 12.8],
+      "faces": {
+        "up": {"uv": [5.25, 9.5, 7.0, 11.0], "texture": "#steel"},
+        "down": {"uv": [7.25, 9.5, 9.25, 11.0], "texture": "#steel"},
+        "west": {"uv": [9.75, 7.75, 12.75, 9.0], "texture": "#steel"},
+        "east": {"uv": [9.75, 7.75, 12.75, 9.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Gunhouse lower rear",
+      "from": [1.65, 9.6, -1.25],
+      "to": [14.35, 15.1, 0.15],
+      "faces": {
+        "up": {"uv": [0.0, 4.25, 5.0, 7.25], "texture": "#steel"},
+        "down": {"uv": [7.25, 9.5, 9.25, 11.0], "texture": "#steel"},
+        "north": {"uv": [10.5, 4.25, 15.5, 7.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Gunhouse lower port rear",
+      "from": [0.25, 9.6, 0.15],
+      "to": [2.22989899, 15.1, 1.13994949],
+      "rotation": {"origin": [0.25, 9.6, 0.15], "axis": "y", "angle": 45},
+      "faces": {
+        "up": {"uv": [0.0, 4.25, 5.0, 7.25], "texture": "#steel"},
+        "down": {"uv": [7.25, 9.5, 9.25, 11.0], "texture": "#steel"},
+        "north": {"uv": [10.5, 4.25, 15.5, 7.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Gunhouse lower starboard rear",
+      "from": [14.35, 9.6, -1.25],
+      "to": [16.32989899, 15.1, -0.26005051],
+      "rotation": {"origin": [14.35, 9.6, -1.25], "axis": "y", "angle": -45},
+      "faces": {
+        "up": {"uv": [0.0, 4.25, 5.0, 7.25], "texture": "#steel"},
+        "down": {"uv": [7.25, 9.5, 9.25, 11.0], "texture": "#steel"},
+        "north": {"uv": [10.5, 4.25, 15.5, 7.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Gunhouse lower middle",
+      "from": [0.25, 9.6, 0.15],
+      "to": [15.75, 15.1, 14.25],
+      "faces": {
+        "up": {"uv": [0.0, 4.25, 5.0, 7.25], "texture": "#steel"},
+        "down": {"uv": [7.25, 9.5, 9.25, 11.0], "texture": "#steel"},
+        "west": {"uv": [8.25, 0.0, 15.25, 3.25], "texture": "#steel"},
+        "east": {"uv": [8.25, 0.0, 15.25, 3.25], "texture": "#steel"},
+        "south": {"uv": [0.0, 0.0, 8.0, 4.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "After roof rear",
+      "from": [1.65, 15.1, -1.25],
+      "to": [14.35, 18.65, 0.15],
+      "faces": {
+        "up": {"uv": [0.0, 4.25, 5.0, 7.25], "texture": "#steel"},
+        "north": {"uv": [10.5, 4.25, 15.5, 7.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "After roof port rear",
+      "from": [0.25, 15.1, 0.15],
+      "to": [2.22989899, 18.65, 1.13994949],
+      "rotation": {"origin": [0.25, 15.1, 0.15], "axis": "y", "angle": 45},
+      "faces": {
+        "up": {"uv": [0.0, 4.25, 5.0, 7.25], "texture": "#steel"},
+        "north": {"uv": [10.5, 4.25, 15.5, 7.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "After roof starboard rear",
+      "from": [14.35, 15.1, -1.25],
+      "to": [16.32989899, 18.65, -0.26005051],
+      "rotation": {"origin": [14.35, 15.1, -1.25], "axis": "y", "angle": -45},
+      "faces": {
+        "up": {"uv": [0.0, 4.25, 5.0, 7.25], "texture": "#steel"},
+        "north": {"uv": [10.5, 4.25, 15.5, 7.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "After roof middle",
+      "from": [0.25, 15.1, 0.15],
+      "to": [15.75, 18.65, 5.67954185],
+      "faces": {
+        "up": {"uv": [0.0, 4.25, 5.0, 7.25], "texture": "#steel"},
+        "west": {"uv": [10.5, 4.25, 15.5, 7.25], "texture": "#steel"},
+        "east": {"uv": [10.5, 4.25, 15.5, 7.25], "texture": "#steel"},
+        "south": {"uv": [0.0, 4.25, 5.0, 7.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Sloping forward roof",
+      "from": [0.25, 10.9, 4.97340295],
+      "to": [15.75, 15.1, 14.25],
+      "rotation": {"origin": [8, 15.1, 14.25], "axis": "x", "angle": 22.5},
+      "faces": {
+        "up": {"uv": [5.25, 4.25, 10.0, 7.25], "texture": "#steel"},
+        "west": {"uv": [8.25, 3.5, 10.25, 4.0], "texture": "#steel"},
+        "east": {"uv": [8.25, 3.5, 10.25, 4.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Roof hatch rear",
+      "from": [4.52, 18.65, -0.15],
+      "to": [6.38, 19.7, 0.37],
+      "faces": {
+        "up": {"uv": [13.0, 7.75, 15.25, 9.25], "texture": "#steel"},
+        "north": {"uv": [9.75, 9.5, 12.25, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Roof hatch port rear",
+      "from": [4.0, 18.65, 0.37],
+      "to": [4.73539105, 19.7, 0.73769553],
+      "rotation": {"origin": [4.0, 18.65, 0.37], "axis": "y", "angle": 45},
+      "faces": {
+        "up": {"uv": [13.0, 7.75, 15.25, 9.25], "texture": "#steel"},
+        "north": {"uv": [9.75, 9.5, 12.25, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Roof hatch starboard rear",
+      "from": [6.38, 18.65, -0.15],
+      "to": [7.11539105, 19.7, 0.21769553],
+      "rotation": {"origin": [6.38, 18.65, -0.15], "axis": "y", "angle": -45},
+      "faces": {
+        "up": {"uv": [13.0, 7.75, 15.25, 9.25], "texture": "#steel"},
+        "north": {"uv": [9.75, 9.5, 12.25, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Roof hatch front",
+      "from": [4.52, 18.65, 2.13],
+      "to": [6.38, 19.7, 2.65],
+      "faces": {
+        "up": {"uv": [13.0, 7.75, 15.25, 9.25], "texture": "#steel"},
+        "south": {"uv": [9.75, 9.5, 12.25, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Roof hatch port front",
+      "from": [4.0, 18.65, 1.76230447],
+      "to": [4.73539105, 19.7, 2.13],
+      "rotation": {"origin": [4.0, 18.65, 2.13], "axis": "y", "angle": -45},
+      "faces": {
+        "up": {"uv": [13.0, 7.75, 15.25, 9.25], "texture": "#steel"},
+        "south": {"uv": [9.75, 9.5, 12.25, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Roof hatch starboard front",
+      "from": [6.38, 18.65, 2.28230447],
+      "to": [7.11539105, 19.7, 2.65],
+      "rotation": {"origin": [6.38, 18.65, 2.65], "axis": "y", "angle": 45},
+      "faces": {
+        "up": {"uv": [13.0, 7.75, 15.25, 9.25], "texture": "#steel"},
+        "south": {"uv": [9.75, 9.5, 12.25, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Roof hatch middle",
+      "from": [4.0, 18.65, 0.37],
+      "to": [6.9, 19.7, 2.13],
+      "faces": {
+        "up": {"uv": [13.0, 7.75, 15.25, 9.25], "texture": "#steel"},
+        "west": {"uv": [9.75, 9.5, 12.25, 11.0], "texture": "#steel"},
+        "east": {"uv": [9.75, 9.5, 12.25, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Roof vent rear",
+      "from": [3.7, 18.65, 3.05],
+      "to": [4.37, 19.25, 3.3],
+      "faces": {
+        "up": {"uv": [13.0, 7.75, 15.25, 9.25], "texture": "#steel"},
+        "north": {"uv": [9.75, 9.5, 12.25, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Roof vent port rear",
+      "from": [3.45, 18.65, 3.3],
+      "to": [3.80355339, 19.25, 3.4767767],
+      "rotation": {"origin": [3.45, 18.65, 3.3], "axis": "y", "angle": 45},
+      "faces": {
+        "up": {"uv": [13.0, 7.75, 15.25, 9.25], "texture": "#steel"},
+        "north": {"uv": [9.75, 9.5, 12.25, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Roof vent starboard rear",
+      "from": [4.37, 18.65, 3.05],
+      "to": [4.72355339, 19.25, 3.2267767],
+      "rotation": {"origin": [4.37, 18.65, 3.05], "axis": "y", "angle": -45},
+      "faces": {
+        "up": {"uv": [13.0, 7.75, 15.25, 9.25], "texture": "#steel"},
+        "north": {"uv": [9.75, 9.5, 12.25, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Roof vent front",
+      "from": [3.7, 18.65, 3.93],
+      "to": [4.37, 19.25, 4.18],
+      "faces": {
+        "up": {"uv": [13.0, 7.75, 15.25, 9.25], "texture": "#steel"},
+        "south": {"uv": [9.75, 9.5, 12.25, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Roof vent port front",
+      "from": [3.45, 18.65, 3.7532233],
+      "to": [3.80355339, 19.25, 3.93],
+      "rotation": {"origin": [3.45, 18.65, 3.93], "axis": "y", "angle": -45},
+      "faces": {
+        "up": {"uv": [13.0, 7.75, 15.25, 9.25], "texture": "#steel"},
+        "south": {"uv": [9.75, 9.5, 12.25, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Roof vent starboard front",
+      "from": [4.37, 18.65, 4.0032233],
+      "to": [4.72355339, 19.25, 4.18],
+      "rotation": {"origin": [4.37, 18.65, 4.18], "axis": "y", "angle": 45},
+      "faces": {
+        "up": {"uv": [13.0, 7.75, 15.25, 9.25], "texture": "#steel"},
+        "south": {"uv": [9.75, 9.5, 12.25, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Roof vent middle",
+      "from": [3.45, 18.65, 3.3],
+      "to": [4.62, 19.25, 3.93],
+      "faces": {
+        "up": {"uv": [13.0, 7.75, 15.25, 9.25], "texture": "#steel"},
+        "west": {"uv": [9.75, 9.5, 12.25, 11.0], "texture": "#steel"},
+        "east": {"uv": [9.75, 9.5, 12.25, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Gun shield",
+      "from": [3.3, 10.35, 14.25],
+      "to": [12.7, 14.75, 14.48],
+      "faces": {
+        "west": {"uv": [9.75, 9.5, 12.25, 11.0], "texture": "#steel"},
+        "east": {"uv": [9.75, 9.5, 12.25, 11.0], "texture": "#steel"},
+        "up": {"uv": [9.75, 9.5, 12.25, 11.0], "texture": "#steel"},
+        "down": {"uv": [9.75, 9.5, 12.25, 11.0], "texture": "#steel"},
+        "south": {"uv": [0.0, 7.75, 4.75, 10.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Ladder rail 1",
+      "from": [15.73, 10.0, 1.16],
+      "to": [15.99, 19.07, 1.38],
+      "faces": {
+        "north": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "south": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "west": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "east": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "up": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "down": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Ladder return 1",
+      "from": [15.44, 18.82, 1.16],
+      "to": [15.73, 19.07, 1.38],
+      "faces": {
+        "north": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "south": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "west": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "up": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "down": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Ladder rail 2",
+      "from": [15.73, 10.0, 2.76],
+      "to": [15.99, 19.07, 2.98],
+      "faces": {
+        "north": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "south": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "west": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "east": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "up": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "down": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Ladder return 2",
+      "from": [15.44, 18.82, 2.76],
+      "to": [15.73, 19.07, 2.98],
+      "faces": {
+        "north": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "south": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "west": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "up": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "down": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Ladder rung 1",
+      "from": [15.75, 10.72, 1.38],
+      "to": [15.97, 10.92, 2.76],
+      "faces": {
+        "up": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "down": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "west": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "east": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Ladder rung 2",
+      "from": [15.75, 11.94, 1.38],
+      "to": [15.97, 12.14, 2.76],
+      "faces": {
+        "up": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "down": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "west": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "east": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Ladder rung 3",
+      "from": [15.75, 13.16, 1.38],
+      "to": [15.97, 13.36, 2.76],
+      "faces": {
+        "up": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "down": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "west": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "east": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Ladder rung 4",
+      "from": [15.75, 14.38, 1.38],
+      "to": [15.97, 14.58, 2.76],
+      "faces": {
+        "up": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "down": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "west": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "east": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Ladder rung 5",
+      "from": [15.75, 15.6, 1.38],
+      "to": [15.97, 15.8, 2.76],
+      "faces": {
+        "up": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "down": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "west": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "east": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Ladder rung 6",
+      "from": [15.75, 16.82, 1.38],
+      "to": [15.97, 17.02, 2.76],
+      "faces": {
+        "up": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "down": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "west": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"},
+        "east": {"uv": [13.0, 9.5, 15.0, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Port barrel root",
+      "from": [4.26, 12.26, 14.48],
+      "to": [5.64, 13.64, 20.35],
+      "faces": {
+        "west": {"uv": [5.75, 11.5, 9.0, 13.0], "texture": "#steel"},
+        "east": {"uv": [5.75, 11.5, 9.0, 13.0], "texture": "#steel"},
+        "up": {"uv": [5.75, 13.5, 9.5, 14.75], "texture": "#steel"},
+        "down": {"uv": [10.0, 13.5, 13.5, 14.75], "texture": "#steel"},
+        "south": {"uv": [9.75, 9.5, 12.25, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Port barrel",
+      "from": [4.46, 12.46, 20.35],
+      "to": [5.44, 13.44, 31.25],
+      "faces": {
+        "west": {"uv": [9.25, 11.5, 14.5, 13.0], "texture": "#steel"},
+        "east": {"uv": [9.25, 11.5, 14.5, 13.0], "texture": "#steel"},
+        "up": {"uv": [5.75, 13.5, 9.5, 14.75], "texture": "#steel"},
+        "down": {"uv": [10.0, 13.5, 13.5, 14.75], "texture": "#steel"},
+        "south": {"uv": [14.5, 13.75, 15.75, 15.0], "texture": "#muzzle"}
+      }
+    },
+    {
+      "name": "Center barrel root",
+      "from": [7.31, 12.26, 14.48],
+      "to": [8.69, 13.64, 20.35],
+      "faces": {
+        "west": {"uv": [5.75, 11.5, 9.0, 13.0], "texture": "#steel"},
+        "east": {"uv": [5.75, 11.5, 9.0, 13.0], "texture": "#steel"},
+        "up": {"uv": [5.75, 13.5, 9.5, 14.75], "texture": "#steel"},
+        "down": {"uv": [10.0, 13.5, 13.5, 14.75], "texture": "#steel"},
+        "south": {"uv": [9.75, 9.5, 12.25, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Center barrel",
+      "from": [7.51, 12.46, 20.35],
+      "to": [8.49, 13.44, 31.25],
+      "faces": {
+        "west": {"uv": [9.25, 11.5, 14.5, 13.0], "texture": "#steel"},
+        "east": {"uv": [9.25, 11.5, 14.5, 13.0], "texture": "#steel"},
+        "up": {"uv": [5.75, 13.5, 9.5, 14.75], "texture": "#steel"},
+        "down": {"uv": [10.0, 13.5, 13.5, 14.75], "texture": "#steel"},
+        "south": {"uv": [14.5, 13.75, 15.75, 15.0], "texture": "#muzzle"}
+      }
+    },
+    {
+      "name": "Starboard barrel root",
+      "from": [10.36, 12.26, 14.48],
+      "to": [11.74, 13.64, 20.35],
+      "faces": {
+        "west": {"uv": [5.75, 11.5, 9.0, 13.0], "texture": "#steel"},
+        "east": {"uv": [5.75, 11.5, 9.0, 13.0], "texture": "#steel"},
+        "up": {"uv": [5.75, 13.5, 9.5, 14.75], "texture": "#steel"},
+        "down": {"uv": [10.0, 13.5, 13.5, 14.75], "texture": "#steel"},
+        "south": {"uv": [9.75, 9.5, 12.25, 11.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Starboard barrel",
+      "from": [10.56, 12.46, 20.35],
+      "to": [11.54, 13.44, 31.25],
+      "faces": {
+        "west": {"uv": [9.25, 11.5, 14.5, 13.0], "texture": "#steel"},
+        "east": {"uv": [9.25, 11.5, 14.5, 13.0], "texture": "#steel"},
+        "up": {"uv": [5.75, 13.5, 9.5, 14.75], "texture": "#steel"},
+        "down": {"uv": [10.0, 13.5, 13.5, 14.75], "texture": "#steel"},
+        "south": {"uv": [14.5, 13.75, 15.75, 15.0], "texture": "#muzzle"}
+      }
+    }
+  ]
+}

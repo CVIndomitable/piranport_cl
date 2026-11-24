@@ -1,0 +1,227 @@
+{
+  "gui_light": "front",
+  "textures": {"particle": "piranport:item/japanese_single_152mm_gun_shield", "shield": "piranport:item/japanese_single_152mm_gun_shield", "muzzle": "piranport:item/japanese_single_152mm_gun_shield"},
+  "elements": [
+    {
+      "name": "Grip shoulder",
+      "from": [5.55, 8.0, 3.38],
+      "to": [10.45, 9.3, 8.18],
+      "faces": {
+        "north": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"},
+        "south": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"},
+        "west": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"},
+        "east": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"},
+        "up": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"},
+        "down": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Hand grip",
+      "from": [6.35, 4.75, 3.93],
+      "to": [9.65, 8.0, 7.63],
+      "faces": {
+        "north": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"},
+        "south": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"},
+        "west": {"uv": [11.75, 13.75, 13.75, 15.75], "texture": "#shield"},
+        "east": {"uv": [11.75, 13.75, 13.75, 15.75], "texture": "#shield"},
+        "down": {"uv": [14.0, 13.75, 15.25, 15.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Armored drum rear",
+      "from": [5.25, 9.22, 2.0],
+      "to": [10.75, 17.75, 2.15],
+      "faces": {
+        "north": {"uv": [7.25, 6.75, 11.5, 11.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Armored drum front",
+      "from": [5.25, 9.22, 10.4],
+      "to": [10.75, 17.75, 10.55],
+      "faces": {
+        "south": {"uv": [7.25, 6.75, 11.5, 11.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Armored drum port side",
+      "from": [2.4, 9.22, 4.85],
+      "to": [2.55, 17.75, 7.7],
+      "faces": {
+        "west": {"uv": [7.25, 6.75, 11.5, 11.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Armored drum starboard side",
+      "from": [13.45, 9.22, 4.85],
+      "to": [13.6, 17.75, 7.7],
+      "faces": {
+        "east": {"uv": [7.25, 6.75, 11.5, 11.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Armored drum port rear",
+      "from": [2.4, 9.22, 4.85],
+      "to": [6.430509, 17.75, 5.0],
+      "rotation": {"origin": [2.4, 9.22, 4.85], "axis": "y", "angle": 45},
+      "faces": {
+        "north": {"uv": [7.25, 6.75, 11.5, 11.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Armored drum starboard rear",
+      "from": [10.75, 9.22, 2.0],
+      "to": [14.780509, 17.75, 2.15],
+      "rotation": {"origin": [10.75, 9.22, 2.0], "axis": "y", "angle": -45},
+      "faces": {
+        "north": {"uv": [7.25, 6.75, 11.5, 11.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Armored drum port front",
+      "from": [2.4, 9.22, 7.55],
+      "to": [6.430509, 17.75, 7.7],
+      "rotation": {"origin": [2.4, 9.22, 7.7], "axis": "y", "angle": -45},
+      "faces": {
+        "south": {"uv": [7.25, 6.75, 11.5, 11.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Armored drum starboard front",
+      "from": [10.75, 9.22, 10.4],
+      "to": [14.780509, 17.75, 10.55],
+      "rotation": {"origin": [10.75, 9.22, 10.55], "axis": "y", "angle": 45},
+      "faces": {
+        "south": {"uv": [11.75, 6.75, 15.0, 11.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Canvas surround",
+      "from": [5.9, 10.68, 10.4],
+      "to": [10.1, 15.56, 10.72],
+      "faces": {
+        "north": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"},
+        "south": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"},
+        "west": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"},
+        "east": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"},
+        "up": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"},
+        "down": {"uv": [14.5, 0.0, 16.0, 1.0], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Canvas skirt",
+      "from": [6.02, 10.82, 10.72],
+      "to": [9.98, 15.42, 11.26],
+      "faces": {
+        "south": {"uv": [11.75, 11.75, 13.0, 13.25], "texture": "#shield"},
+        "west": {"uv": [7.25, 11.75, 9.5, 14.5], "texture": "#shield"},
+        "east": {"uv": [7.25, 11.75, 9.5, 14.5], "texture": "#shield"},
+        "up": {"uv": [9.75, 11.75, 11.5, 13.75], "texture": "#shield"},
+        "down": {"uv": [7.25, 11.75, 9.5, 14.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Canvas folds",
+      "from": [6.4, 11.4, 11.26],
+      "to": [9.6, 14.97, 12.03],
+      "faces": {
+        "south": {"uv": [11.75, 11.75, 13.0, 13.25], "texture": "#shield"},
+        "west": {"uv": [7.25, 11.75, 9.5, 14.5], "texture": "#shield"},
+        "east": {"uv": [7.25, 11.75, 9.5, 14.5], "texture": "#shield"},
+        "up": {"uv": [9.75, 11.75, 11.5, 13.75], "texture": "#shield"},
+        "down": {"uv": [7.25, 11.75, 9.5, 14.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Canvas sleeve",
+      "from": [7.02, 12.27, 12.03],
+      "to": [8.98, 14.23, 12.85],
+      "faces": {
+        "south": {"uv": [11.75, 11.75, 13.0, 13.25], "texture": "#shield"},
+        "west": {"uv": [7.25, 11.75, 9.5, 14.5], "texture": "#shield"},
+        "east": {"uv": [7.25, 11.75, 9.5, 14.5], "texture": "#shield"},
+        "up": {"uv": [9.75, 11.75, 11.5, 13.75], "texture": "#shield"},
+        "down": {"uv": [7.25, 11.75, 9.5, 14.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Barrel",
+      "from": [7.36, 12.61, 12.85],
+      "to": [8.64, 13.89, 26],
+      "faces": {
+        "south": {"uv": [13.25, 11.75, 14.5, 13.0], "texture": "#muzzle"},
+        "west": {"uv": [0.0, 13.5, 6.75, 14.0], "texture": "#shield"},
+        "east": {"uv": [0.0, 13.5, 6.75, 14.0], "texture": "#shield"},
+        "up": {"uv": [0.0, 14.25, 6.75, 14.75], "texture": "#shield"},
+        "down": {"uv": [0.0, 15.0, 6.75, 15.5], "texture": "#shield"}
+      }
+    },
+    {
+      "name": "Armored drum cover center",
+      "from": [2.4, 9.22, 4.85],
+      "to": [13.6, 17.75, 7.7],
+      "faces": {
+        "up": {"texture": "#shield", "uv": [4.25, 3.5, 4.5, 3.75]},
+        "down": {"texture": "#shield", "uv": [4.25, 10.25, 4.5, 10.5]}
+      }
+    },
+    {
+      "name": "Armored drum cover rear",
+      "from": [5.25, 9.22, 2.0],
+      "to": [10.75, 17.75, 4.85],
+      "faces": {
+        "up": {"texture": "#shield", "uv": [4.25, 3.5, 4.5, 3.75]},
+        "down": {"texture": "#shield", "uv": [4.25, 10.25, 4.5, 10.5]}
+      }
+    },
+    {
+      "name": "Armored drum cover front",
+      "from": [5.25, 9.22, 7.7],
+      "to": [10.75, 17.75, 10.55],
+      "faces": {
+        "up": {"texture": "#shield", "uv": [4.25, 3.5, 4.5, 3.75]},
+        "down": {"texture": "#shield", "uv": [4.25, 10.25, 4.5, 10.5]}
+      }
+    },
+    {
+      "name": "Armored drum cover corner 1",
+      "from": [10.75, 9.22, 2.0],
+      "to": [14.78050865, 17.75, 4.01525433],
+      "rotation": {"origin": [10.75, 9.22, 2.0], "axis": "y", "angle": -45},
+      "faces": {
+        "up": {"texture": "#shield", "uv": [4.25, 3.5, 4.5, 3.75]},
+        "down": {"texture": "#shield", "uv": [4.25, 10.25, 4.5, 10.5]}
+      }
+    },
+    {
+      "name": "Armored drum cover corner 2",
+      "from": [10.75, 9.22, 8.53474567],
+      "to": [14.78050865, 17.75, 10.55],
+      "rotation": {"origin": [10.75, 9.22, 10.55], "axis": "y", "angle": 45},
+      "faces": {
+        "up": {"texture": "#shield", "uv": [4.25, 3.5, 4.5, 3.75]},
+        "down": {"texture": "#shield", "uv": [4.25, 10.25, 4.5, 10.5]}
+      }
+    },
+    {
+      "name": "Armored drum cover corner 3",
+      "from": [2.4, 9.22, 5.68474567],
+      "to": [6.43050865, 17.75, 7.7],
+      "rotation": {"origin": [2.4, 9.22, 7.700000000000001], "axis": "y", "angle": -45},
+      "faces": {
+        "up": {"texture": "#shield", "uv": [4.25, 3.5, 4.5, 3.75]},
+        "down": {"texture": "#shield", "uv": [4.25, 10.25, 4.5, 10.5]}
+      }
+    },
+    {
+      "name": "Armored drum cover corner 4",
+      "from": [2.4, 9.22, 4.85],
+      "to": [6.43050865, 17.75, 6.86525433],
+      "rotation": {"origin": [2.4, 9.22, 4.85], "axis": "y", "angle": 45},
+      "faces": {
+        "up": {"texture": "#shield", "uv": [4.25, 3.5, 4.5, 3.75]},
+        "down": {"texture": "#shield", "uv": [4.25, 10.25, 4.5, 10.5]}
+      }
+    }
+  ]
+}

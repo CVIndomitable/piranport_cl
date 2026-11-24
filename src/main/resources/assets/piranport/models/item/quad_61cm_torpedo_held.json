@@ -1,0 +1,12 @@
+{
+  "loader": "neoforge:obj",
+  "model": "piranport:models/item/quad_61cm_torpedo_held_empty.obj",
+  "automatic_culling": false,
+  "emissive_ambient": false,
+  "flip_v": false,
+  "gui_light": "front",
+  "textures": {
+    "particle": "piranport:item/quad_61cm_torpedo_atlas",
+    "atlas": "piranport:item/quad_61cm_torpedo_atlas"
+  }
+}

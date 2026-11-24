@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/us_twin_5inch_gun_mounted",
+  "textures": {
+    "muzzle": "piranport:item/us_twin_5inch_gun_gunhouse_loaded"
+  }
+}

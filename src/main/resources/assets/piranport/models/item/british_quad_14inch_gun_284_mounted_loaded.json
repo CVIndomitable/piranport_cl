@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/british_quad_14inch_gun_284_mounted",
+  "textures": {
+    "muzzle": "piranport:item/british_quad_14inch_gun_284_turret_loaded"
+  }
+}

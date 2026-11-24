@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/french_quad_380mm_gun_mounted",
+  "textures": {
+    "muzzle": "piranport:item/french_quad_380mm_gun_turret_loaded"
+  }
+}

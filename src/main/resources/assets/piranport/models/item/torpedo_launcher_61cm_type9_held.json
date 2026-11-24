@@ -1,0 +1,12 @@
+{
+  "loader": "neoforge:obj",
+  "model": "piranport:models/item/torpedo_launcher_61cm_type9_held_empty.obj",
+  "automatic_culling": false,
+  "emissive_ambient": false,
+  "flip_v": false,
+  "gui_light": "front",
+  "textures": {
+    "particle": "piranport:item/torpedo_launcher_61cm_type9_atlas",
+    "atlas": "piranport:item/torpedo_launcher_61cm_type9_atlas"
+  }
+}

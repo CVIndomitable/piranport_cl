@@ -1,0 +1,178 @@
+{
+  "gui_light": "front",
+  "textures": {"particle": "piranport:item/british_twin_6inch_gun_gunhouse", "steel": "piranport:item/british_twin_6inch_gun_gunhouse", "muzzle": "piranport:item/british_twin_6inch_gun_gunhouse"},
+  "elements": [
+    {
+      "name": "Grip saddle",
+      "from": [5.55, 8.55, 4.45],
+      "to": [10.45, 9.85, 9.75],
+      "faces": {
+        "north": {"uv": [0.0, 15.25, 1.25, 16.0], "texture": "#steel"},
+        "south": {"uv": [0.0, 15.25, 1.25, 16.0], "texture": "#steel"},
+        "west": {"uv": [0.0, 15.25, 1.25, 16.0], "texture": "#steel"},
+        "east": {"uv": [0.0, 15.25, 1.25, 16.0], "texture": "#steel"},
+        "up": {"uv": [0.0, 15.25, 1.25, 16.0], "texture": "#steel"},
+        "down": {"uv": [0.0, 15.25, 1.25, 16.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Hand grip",
+      "from": [6.45, 4.9, 5.05],
+      "to": [9.55, 8.55, 8.8],
+      "faces": {
+        "north": {"uv": [12.5, 13.25, 14.5, 14.25], "texture": "#steel"},
+        "south": {"uv": [12.5, 13.25, 14.5, 14.25], "texture": "#steel"},
+        "west": {"uv": [12.5, 13.25, 14.5, 14.25], "texture": "#steel"},
+        "east": {"uv": [12.5, 13.25, 14.5, 14.25], "texture": "#steel"},
+        "down": {"uv": [0.0, 15.25, 1.25, 16.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Gunhouse",
+      "from": [2.4, 9.85, 2],
+      "to": [13.6, 16.75, 9.1],
+      "faces": {
+        "north": {"texture": "#steel", "uv": [0.0, 10.75, 7.0, 15.0]},
+        "west": {"texture": "#steel", "uv": [7.25, 0.0, 11.75, 4.25]},
+        "east": {"texture": "#steel", "uv": [7.25, 4.5, 11.75, 8.75]},
+        "up": {"texture": "#steel", "uv": [0.0, 0.0, 7.0, 4.5]}
+      }
+    },
+    {
+      "name": "Gunhouse underside",
+      "from": [2.4, 9.85, 2],
+      "to": [13.6, 16.75, 12.05],
+      "faces": {
+        "down": {"uv": [0.0, 15.25, 1.25, 16.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Sloping side cheeks",
+      "from": [2.4, 9.85, 9.1],
+      "to": [13.6, 16.75, 12.05],
+      "faces": {
+        "west": {"uv": [12.0, 0.0, 14.0, 4.25], "texture": "#steel"},
+        "east": {"uv": [14.0, 0.0, 16.0, 4.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Sloping roof",
+      "from": [2.4001, 15.35, 9.1],
+      "to": [13.5999, 16.75, 12.293057],
+      "rotation": {"axis": "x", "angle": 22.5, "origin": [8, 16.75, 9.1]},
+      "faces": {
+        "up": {"uv": [0.0, 8.5, 7.0, 10.5], "texture": "#steel"},
+        "west": {"texture": "#steel", "uv": [12.5, 7.5, 13.0, 8.0]},
+        "east": {"texture": "#steel", "uv": [12.5, 7.5, 13.0, 8.0]}
+      }
+    },
+    {
+      "name": "Front armor and twin embrasures",
+      "from": [2.4, 9.85, 11.85],
+      "to": [13.6, 15.52807, 12.05],
+      "faces": {
+        "south": {"uv": [0.0, 4.75, 7.0, 8.25], "texture": "#steel"},
+        "west": {"texture": "#steel", "uv": [12.5, 7.5, 13.0, 8.0]},
+        "east": {"texture": "#steel", "uv": [12.5, 7.5, 13.0, 8.0]}
+      }
+    },
+    {
+      "name": "Roof periscope foot",
+      "from": [4.2, 16.75, 3.55],
+      "to": [4.95, 16.9, 4.3],
+      "faces": {
+        "north": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"},
+        "south": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"},
+        "west": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"},
+        "east": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"},
+        "up": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"},
+        "down": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Roof periscope",
+      "from": [4.35, 16.9, 3.7],
+      "to": [4.8, 18, 4.15],
+      "faces": {
+        "north": {"uv": [12.5, 11.75, 13.5, 13.0], "texture": "#steel"},
+        "south": {"uv": [12.5, 11.75, 13.5, 13.0], "texture": "#steel"},
+        "west": {"uv": [12.5, 11.75, 13.5, 13.0], "texture": "#steel"},
+        "east": {"uv": [12.5, 11.75, 13.5, 13.0], "texture": "#steel"},
+        "up": {"uv": [12.5, 11.75, 13.5, 13.0], "texture": "#steel"},
+        "down": {"uv": [12.5, 11.75, 13.5, 13.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Port embrasure brow",
+      "from": [4.82, 14.78, 12.05],
+      "to": [6.48, 15, 12.45],
+      "faces": {
+        "south": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"},
+        "up": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"},
+        "west": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"},
+        "east": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"},
+        "down": {"uv": [0.0, 15.25, 1.25, 16.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Port barrel root",
+      "from": [5.01, 12.41, 12.05],
+      "to": [6.29, 13.69, 13.25],
+      "faces": {
+        "south": {"uv": [12.5, 10.25, 14.75, 11.5], "texture": "#steel"},
+        "west": {"uv": [12.5, 10.25, 14.75, 11.5], "texture": "#steel"},
+        "east": {"uv": [12.5, 10.25, 14.75, 11.5], "texture": "#steel"},
+        "up": {"uv": [12.5, 10.25, 14.75, 11.5], "texture": "#steel"},
+        "down": {"uv": [14.0, 8.75, 14.75, 10.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Port barrel",
+      "from": [5.22, 12.62, 13.25],
+      "to": [6.08, 13.48, 26],
+      "faces": {
+        "south": {"uv": [12.5, 8.75, 13.75, 10.0], "texture": "#muzzle"},
+        "west": {"uv": [7.25, 14.25, 14.5, 15.0], "texture": "#steel"},
+        "east": {"uv": [7.25, 14.25, 14.5, 15.0], "texture": "#steel"},
+        "up": {"uv": [15.0, 8.5, 15.75, 15.75], "texture": "#steel"},
+        "down": {"uv": [14.0, 8.75, 14.75, 10.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Starboard embrasure brow",
+      "from": [9.52, 14.78, 12.05],
+      "to": [11.18, 15, 12.45],
+      "faces": {
+        "south": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"},
+        "up": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"},
+        "west": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"},
+        "east": {"uv": [12.0, 7.25, 13.75, 8.25], "texture": "#steel"},
+        "down": {"uv": [0.0, 15.25, 1.25, 16.0], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Starboard barrel root",
+      "from": [9.71, 12.41, 12.05],
+      "to": [10.99, 13.69, 13.25],
+      "faces": {
+        "south": {"uv": [12.5, 10.25, 14.75, 11.5], "texture": "#steel"},
+        "west": {"uv": [12.5, 10.25, 14.75, 11.5], "texture": "#steel"},
+        "east": {"uv": [12.5, 10.25, 14.75, 11.5], "texture": "#steel"},
+        "up": {"uv": [12.5, 10.25, 14.75, 11.5], "texture": "#steel"},
+        "down": {"uv": [14.0, 8.75, 14.75, 10.25], "texture": "#steel"}
+      }
+    },
+    {
+      "name": "Starboard barrel",
+      "from": [9.92, 12.62, 13.25],
+      "to": [10.78, 13.48, 26],
+      "faces": {
+        "south": {"uv": [12.5, 8.75, 13.75, 10.0], "texture": "#muzzle"},
+        "west": {"uv": [7.25, 14.25, 14.5, 15.0], "texture": "#steel"},
+        "east": {"uv": [7.25, 14.25, 14.5, 15.0], "texture": "#steel"},
+        "up": {"uv": [15.0, 8.5, 15.75, 15.75], "texture": "#steel"},
+        "down": {"uv": [14.0, 8.75, 14.75, 10.25], "texture": "#steel"}
+      }
+    }
+  ]
+}

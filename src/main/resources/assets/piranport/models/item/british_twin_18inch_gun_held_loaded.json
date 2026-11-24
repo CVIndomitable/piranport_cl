@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/british_twin_18inch_gun_held",
+  "textures": {
+    "muzzle": "piranport:item/british_twin_18inch_gun_turret_loaded"
+  }
+}

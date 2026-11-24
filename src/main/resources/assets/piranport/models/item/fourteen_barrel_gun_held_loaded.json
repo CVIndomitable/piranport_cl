@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/fourteen_barrel_gun_held",
+  "textures": {
+    "muzzle": "piranport:item/fourteen_barrel_gun_turret_loaded"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/japanese_twin_410mm_gun_mounted",
+  "textures": {
+    "muzzle": "piranport:item/japanese_twin_410mm_gun_turret_loaded"
+  }
+}

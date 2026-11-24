@@ -1,0 +1,12 @@
+{
+  "loader": "neoforge:obj",
+  "model": "piranport:models/item/quintuple_21in_torpedo_mk35_mounted.obj",
+  "automatic_culling": false,
+  "emissive_ambient": false,
+  "flip_v": false,
+  "gui_light": "front",
+  "textures": {
+    "particle": "piranport:item/quintuple_21in_torpedo_mk35_atlas",
+    "atlas": "piranport:item/quintuple_21in_torpedo_mk35_atlas"
+  }
+}

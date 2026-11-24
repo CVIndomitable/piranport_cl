@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/us_triple_8inch_gun_mounted",
+  "textures": {
+    "muzzle": "piranport:item/us_triple_8inch_gun_turret_loaded"
+  }
+}

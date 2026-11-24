@@ -1,0 +1,13 @@
+{
+  "loader": "neoforge:obj",
+  "model": "piranport:models/item/soviet_triple_460mm_gun_held.obj",
+  "automatic_culling": false,
+  "emissive_ambient": false,
+  "flip_v": false,
+  "gui_light": "front",
+  "textures": {
+    "particle": "piranport:item/soviet_triple_460mm_gun_turret",
+    "armor": "piranport:item/soviet_triple_460mm_gun_turret",
+    "muzzle": "piranport:item/soviet_triple_460mm_gun_turret"
+  }
+}

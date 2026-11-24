@@ -1,6 +1,3 @@
 {
-  "parent": "piranport:item/german_skc40_triple_420mm_gun_3d",
-  "textures": {
-    "muzzle_empty": "piranport:item/german_skc40_triple_420mm_gun_muzzle_loaded"
-  }
+  "parent": "piranport:item/german_skc40_triple_420mm_gun_mounted_loaded"
 }

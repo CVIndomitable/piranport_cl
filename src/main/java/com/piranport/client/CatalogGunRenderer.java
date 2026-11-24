@@ -34,7 +34,9 @@ import java.util.function.Supplier;
  * 07 表批量主炮的通用自定义物品渲染（BEWLR）。
  *
  * <p>同一套逻辑服务多门炮：物品栏画 32x32 图标，舰装挂点（FIXED + rigging pass）渲染对应
- * {@code models/item/<id>_3d.json} 的立体炮塔。每门炮用 {@link Spec} 描述
+ * {@code models/item/<id>_3d.json} 的立体炮塔。需要手持 3D 的炮则成对提供
+ * {@code models/item/<id>_mounted.json} 与 {@code models/item/<id>_held.json}。
+ * 每门炮用 {@link Spec} 描述
  * 物品、图标和模型路径，避免为每门炮重复一份 180 行渲染器。</p>
  *
  * <p>WHY：物品模型无法按显示上下文切换模型，只有 BEWLR 能同时做到
@@ -51,25 +53,37 @@ public class CatalogGunRenderer extends BlockEntityWithoutLevelRenderer {
      */
     public static final class Spec {
         private final String id;
+        private final float modelScale;
         private final List<Supplier<? extends Item>> items;
         private final ResourceLocation iconLoaded;
         private final ResourceLocation iconEmpty;
         private final ModelResourceLocation modelEmpty;
         private final ModelResourceLocation modelLoaded;
+        private final ModelResourceLocation heldEmpty;
+        private final ModelResourceLocation heldLoaded;
 
-        private Spec(String id, List<Supplier<? extends Item>> items) {
+        private Spec(String id, String iconId, boolean hasHeldModel, float modelScale,
+                     List<Supplier<? extends Item>> items) {
             this.id = id;
+            this.modelScale = modelScale;
             this.items = items;
             this.iconLoaded = ResourceLocation.fromNamespaceAndPath(
-                    PiranPort.MOD_ID, "textures/item/" + id + ".png");
+                    PiranPort.MOD_ID, "textures/item/" + iconId + ".png");
             this.iconEmpty = ResourceLocation.fromNamespaceAndPath(
-                    PiranPort.MOD_ID, "textures/item/" + id + "_empty.png");
+                    PiranPort.MOD_ID, "textures/item/" + iconId + "_empty.png");
+            String mountedSuffix = hasHeldModel ? "_mounted" : "_3d";
             this.modelEmpty = ModelResourceLocation.standalone(
                     ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID,
-                            "item/" + id + "_3d"));
+                            "item/" + id + mountedSuffix));
             this.modelLoaded = ModelResourceLocation.standalone(
                     ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID,
-                            "item/" + id + "_3d_loaded"));
+                            "item/" + id + mountedSuffix + "_loaded"));
+            this.heldEmpty = hasHeldModel ? ModelResourceLocation.standalone(
+                    ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID,
+                            "item/" + id + "_held")) : null;
+            this.heldLoaded = hasHeldModel ? ModelResourceLocation.standalone(
+                    ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID,
+                            "item/" + id + "_held_loaded")) : null;
         }
 
         public String id() {
@@ -86,6 +100,18 @@ public class CatalogGunRenderer extends BlockEntityWithoutLevelRenderer {
 
         public ModelResourceLocation modelLoaded() {
             return modelLoaded;
+        }
+
+        public ModelResourceLocation heldEmpty() {
+            return heldEmpty;
+        }
+
+        public ModelResourceLocation heldLoaded() {
+            return heldLoaded;
+        }
+
+        public boolean hasHeldModel() {
+            return heldEmpty != null;
         }
 
         private boolean matches(ItemStack stack) {
@@ -111,7 +137,31 @@ public class CatalogGunRenderer extends BlockEntityWithoutLevelRenderer {
     /** 注册一份渲染描述；在 {@link ClientModEvents} 静态初始化时调用。 */
     @SafeVarargs
     public static Spec spec(String id, Supplier<? extends Item>... items) {
-        Spec spec = new Spec(id, List.of(items));
+        return registerSpec(id, id, false, 1.0F, List.of(items));
+    }
+
+    public static Spec spec(String id, String iconId, Supplier<? extends Item> item) {
+        return registerSpec(id, iconId, false, 1.0F, List.of(item));
+    }
+
+    /** 注册同时具备手持与舰装 3D 模型的火炮。 */
+    @SafeVarargs
+    public static Spec specWithHeldModel(String id, Supplier<? extends Item>... items) {
+        return specWithHeldModel(id, 1.0F, items);
+    }
+
+    @SafeVarargs
+    public static Spec specWithHeldModel(String id, float modelScale, Supplier<? extends Item>... items) {
+        return registerSpec(id, id, true, modelScale, List.of(items));
+    }
+
+    public static Spec specWithHeldModel(String id, String iconId, Supplier<? extends Item> item) {
+        return registerSpec(id, iconId, true, 1.0F, List.of(item));
+    }
+
+    private static Spec registerSpec(String id, String iconId, boolean hasHeldModel, float modelScale,
+                                     List<Supplier<? extends Item>> items) {
+        Spec spec = new Spec(id, iconId, hasHeldModel, modelScale, items);
         SPECS.add(spec);
         return spec;
     }
@@ -153,12 +203,22 @@ public class CatalogGunRenderer extends BlockEntityWithoutLevelRenderer {
                              int packedLight, int packedOverlay) {
         if (!spec.matches(stack)) return;
 
+        boolean loaded = isLoaded(stack);
         if (displayContext == ItemDisplayContext.FIXED && RiggingRenderContext.isRiggingPass()) {
-            renderGun3D(stack, poseStack, bufferSource, packedLight, packedOverlay);
-        } else {
-            renderFlatIcon(displayContext, isLoaded(stack), poseStack, bufferSource,
-                    packedLight, packedOverlay);
+            if (renderGun3D(loaded ? spec.modelLoaded() : spec.modelEmpty(), poseStack,
+                    bufferSource, packedLight, packedOverlay)) return;
+        } else if (spec.hasHeldModel() && isHandContext(displayContext)) {
+            if (renderGun3D(loaded ? spec.heldLoaded() : spec.heldEmpty(), poseStack,
+                    bufferSource, packedLight, packedOverlay)) return;
         }
+        renderFlatIcon(displayContext, loaded, poseStack, bufferSource, packedLight, packedOverlay);
+    }
+
+    private static boolean isHandContext(ItemDisplayContext context) {
+        return context == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND
+                || context == ItemDisplayContext.FIRST_PERSON_LEFT_HAND
+                || context == ItemDisplayContext.THIRD_PERSON_RIGHT_HAND
+                || context == ItemDisplayContext.THIRD_PERSON_LEFT_HAND;
     }
 
     private static boolean isLoaded(ItemStack stack) {
@@ -170,15 +230,16 @@ public class CatalogGunRenderer extends BlockEntityWithoutLevelRenderer {
      * 渲染 3D 炮塔。模型是 standalone 注册的，按 LOADED_AMMO 选空膛/装填版本。
      * 坐标空间：物品渲染管线已在 pose 中做过 translate(-0.5)，模型坐标即 0..1。
      */
-    private void renderGun3D(ItemStack stack, PoseStack poseStack,
-                             MultiBufferSource bufferSource,
-                             int packedLight, int packedOverlay) {
+    private boolean renderGun3D(ModelResourceLocation resource, PoseStack poseStack,
+                                MultiBufferSource bufferSource,
+                                int packedLight, int packedOverlay) {
         Minecraft mc = Minecraft.getInstance();
-        BakedModel model = mc.getModelManager().getModel(
-                isLoaded(stack) ? spec.modelLoaded() : spec.modelEmpty());
-        if (model == null || model == mc.getModelManager().getMissingModel()) return;
+        BakedModel model = mc.getModelManager().getModel(resource);
+        if (model == null || model == mc.getModelManager().getMissingModel()) return false;
 
         VertexConsumer consumer = bufferSource.getBuffer(Sheets.translucentItemSheet());
+        poseStack.pushPose();
+        scaleModel(poseStack, spec.modelScale);
         PoseStack.Pose pose = poseStack.last();
         RandomSource random = RandomSource.create(42L);
 
@@ -194,6 +255,14 @@ public class CatalogGunRenderer extends BlockEntityWithoutLevelRenderer {
             consumer.putBulkData(pose, quad, 1.0F, 1.0F, 1.0F, 1.0F,
                     packedLight, packedOverlay);
         }
+        poseStack.popPose();
+        return true;
+    }
+
+    static void scaleModel(PoseStack poseStack, float scale) {
+        poseStack.translate(0.5F, 0.5F, 0.5F);
+        poseStack.scale(scale, scale, scale);
+        poseStack.translate(-0.5F, -0.5F, -0.5F);
     }
 
     /**

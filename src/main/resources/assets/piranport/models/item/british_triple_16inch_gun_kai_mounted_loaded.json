@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/british_triple_16inch_gun_kai_mounted",
+  "textures": {
+    "muzzle": "piranport:item/british_triple_16inch_gun_kai_turret_loaded"
+  }
+}

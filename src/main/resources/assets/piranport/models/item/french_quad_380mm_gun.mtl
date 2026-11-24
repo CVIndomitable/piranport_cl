@@ -1,0 +1,7 @@
+newmtl armor
+Kd 1 1 1
+map_Kd #armor
+
+newmtl muzzle
+Kd 1 1 1
+map_Kd #muzzle

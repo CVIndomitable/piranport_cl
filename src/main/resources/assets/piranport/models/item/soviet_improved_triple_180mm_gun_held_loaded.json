@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/soviet_improved_triple_180mm_gun_held",
+  "textures": {
+    "muzzle": "piranport:item/soviet_improved_triple_180mm_gun_turret_loaded"
+  }
+}

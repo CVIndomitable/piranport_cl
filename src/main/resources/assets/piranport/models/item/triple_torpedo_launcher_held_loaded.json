@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/triple_torpedo_launcher_held",
+  "textures": {
+    "cap": "piranport:item/triple_torpedo_launcher_atlas_loaded"
+  }
+}

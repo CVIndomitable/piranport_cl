@@ -1,0 +1,13 @@
+{
+  "loader": "neoforge:obj",
+  "model": "piranport:models/item/british_triple_6inch_gun_held.obj",
+  "automatic_culling": false,
+  "emissive_ambient": false,
+  "flip_v": false,
+  "gui_light": "front",
+  "textures": {
+    "particle": "piranport:item/british_triple_6inch_gun_turret",
+    "armor": "piranport:item/british_triple_6inch_gun_turret",
+    "muzzle": "piranport:item/british_triple_6inch_gun_turret"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/japanese_single_152mm_gun_held",
+  "textures": {
+    "muzzle": "piranport:item/japanese_single_152mm_gun_shield_loaded"
+  }
+}
